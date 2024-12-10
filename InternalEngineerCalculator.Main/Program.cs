@@ -1,11 +1,12 @@
 ﻿using System.Globalization;
+using System.Text;
 using InternalEngineerCalculator.Main.Common;
 
 namespace InternalEngineerCalculator.Main;
 
 static class Program
 {
-	static void Main()
+	private static void Main()
 	{
 		while (true)
 		{
@@ -16,11 +17,24 @@ static class Program
 
 			var tokens = new Lexer(code).Tokenize();
 
+			/*
 			foreach (var token in tokens)
 				Console.WriteLine(token.ToString());
+			*/
 
+			var evaluator = new Evaluator();
+			var parser = new Parser(tokens);
+			var expr = parser.ParseExpression();
+			var binExpr = expr as BinaryExpression;
+			var str = binExpr!.ToCustomString(new StringBuilder(), "");
+
+			Console.WriteLine(str);
+			Console.WriteLine("Result : " + evaluator.Evaluate(binExpr));
 		}
 	}
+
+
+
 }
 
 public enum TokenType
@@ -85,21 +99,46 @@ internal sealed class BinaryExpression(Expression left, NonValueToken operation,
 	public NonValueToken Operation { get; } = operation;
 	public Expression Right { get; } = right;
 
+	public string ToCustomString(StringBuilder sb, string offset)
+	{
+		sb.Append(offset + "BinaryExpression\n");
+		offset += "	";
+
+		if (Left is BinaryExpression leftExpr)
+			leftExpr.ToCustomString(sb, offset);
+		else if (Left is NumberExpression leftNum)
+			sb.Append(offset + leftNum.Token + "\n");
+
+		sb.Append(offset + Operation + " " + Operation.ValueString + "\n");
+
+		if (Right is BinaryExpression rightExpr)
+			rightExpr.ToCustomString(sb, offset);
+		else if (Right is NumberExpression rightNum)
+			sb.Append(offset + rightNum.Token + "\n");
+
+		return sb.ToString();
+	}
+
 	public override TokenType Type => TokenType.BinaryExpression;
 }
 
-internal sealed class Parser(List<Token> tokens)
+internal sealed class Parser
 {
-	private List<Token> _tokens = tokens;
-
+	private readonly List<Token> _tokens;
 	private int _position;
 
-	private Token Current => _tokens[_position];
+	public Parser(List<Token> tokens)
+	{
+		_tokens = tokens ?? throw new ArgumentNullException(nameof(tokens));
+	}
+
+	private Token? Current => _position < _tokens.Count ? _tokens[_position] : null;
 
 	private Token NextToken()
 	{
 		var current = Current;
-		_position++;
+		if (_position < _tokens.Count)
+			_position++;
 		return current;
 	}
 
@@ -107,13 +146,13 @@ internal sealed class Parser(List<Token> tokens)
 	{
 		var left = ParseTerm();
 
-		while (Current.Type is TokenType.Plus or TokenType.Minus)
+		while (Current?.Type is TokenType.Plus or TokenType.Minus)
 		{
-			if (NextToken() is not NonValueToken operatorToken)
-				throw new Exception();
+			if (Current is not NonValueToken operatorToken)
+				throw new Exception("Expected an operator.");
 
+			NextToken();
 			var right = ParseTerm();
-
 			left = new BinaryExpression(left, operatorToken, right);
 		}
 
@@ -124,13 +163,13 @@ internal sealed class Parser(List<Token> tokens)
 	{
 		var left = ParsePrimary();
 
-		while (Current.Type is TokenType.Multiply or TokenType.Divide)
+		while (Current?.Type is TokenType.Multiply or TokenType.Divide)
 		{
-			if (NextToken() is not NonValueToken operatorToken)
-				throw new Exception();
+			if (Current is not NonValueToken operatorToken)
+				throw new Exception("Expected an operator.");
 
+			NextToken();
 			var right = ParsePrimary();
-
 			left = new BinaryExpression(left, operatorToken, right);
 		}
 
@@ -139,28 +178,31 @@ internal sealed class Parser(List<Token> tokens)
 
 	private Expression ParsePrimary()
 	{
+		if (Current == null)
+			throw new Exception("Unexpected end of input.");
+
 		if (Current.Type == TokenType.OpenParenthesis)
 		{
 			NextToken();
-
 			var expression = ParseExpression();
 
-			if (Current.Type == TokenType.CloseParenthesis)
-				NextToken();
-			else
-				throw new Exception();
+			if (Current?.Type != TokenType.CloseParenthesis)
+				throw new Exception("Expected closing parenthesis.");
 
+			NextToken();
 			return expression;
 		}
 
-		if (Current is not NumberToken floatToken)
-			throw new Exception();
+		if (Current is NumberToken numberToken)
+		{
+			NextToken();
+			return new NumberExpression(numberToken);
+		}
 
-		var floatExpression = new NumberExpression(floatToken);
-		return floatExpression;
+		throw new Exception($"Unexpected token: {Current}");
 	}
-
 }
+
 
 
 internal sealed class Evaluator
