@@ -77,17 +77,10 @@ internal sealed class NumberExpression(NumberToken token) : Expression
 	public override TokenType Type => TokenType.Number;
 }
 
-internal sealed class OperationExpression(NonValueToken token) : Expression
-{
-	public NonValueToken Token { get; } = token;
-
-	public override TokenType Type => Token.Type;
-}
-
-internal sealed class BinaryExpression(Expression left, OperationExpression operation, Expression right) : Expression
+internal sealed class BinaryExpression(Expression left, NonValueToken operation, Expression right) : Expression
 {
 	public Expression Left { get; } = left;
-	public OperationExpression Operation { get; } = operation;
+	public NonValueToken Operation { get; } = operation;
 	public Expression Right { get; } = right;
 
 	public override TokenType Type => TokenType.Unknown;
@@ -114,7 +107,7 @@ internal sealed class Parser(List<Token> tokens)
 
 			var right = ParseTerm();
 
-			left = new BinaryExpression(left, new OperationExpression(operatorToken), right);
+			left = new BinaryExpression(left, operatorToken, right);
 		}
 
 		return left;
@@ -127,11 +120,12 @@ internal sealed class Parser(List<Token> tokens)
 		while (Current.Type is TokenType.Multiply or TokenType.Divide)
 		{
 			var operatorToken = Current as NonValueToken;
+
 			Next();
 
 			var right = ParsePrimary();
 
-			left = new BinaryExpression(left, new OperationExpression(operatorToken), right);
+			left = new BinaryExpression(left, operatorToken, right);
 		}
 
 		return left;
@@ -156,8 +150,6 @@ internal sealed class Parser(List<Token> tokens)
 		var floatToken = new NumberExpression(Current as NumberToken);
 		return floatToken;
 	}
-
-
 }
 
 
