@@ -38,34 +38,59 @@ public enum TokenType
 	Unknown
 }
 
-internal abstract class Token
+internal abstract class Token(TokenType type, int position, string valueString)
 {
-	public abstract string Text { get; set; }
+	public string ValueString => valueString;
 
-	public abstract TokenType Type { get; set; }
+	public int Position => position;
+
+	public TokenType Type => type;
+
+	public int Length => ValueString.Length;
 
 	public override string ToString() => nameof(TokenType);
 }
 
-internal sealed class NumberToken(string text, float value) : Token
+internal sealed class NumberToken(string valueString, int position, float value)
+	: Token(TokenType.Number, position, valueString)
 {
-	public override string Text { get; set; } = text;
-
-	public override TokenType Type { get; set; } = TokenType.Number;
-
-	public float Value { get; set; } = value;
+	public float Value => value;
 
 	public override string ToString() => $"{nameof(NumberToken)} : {Value}";
 }
 
-internal sealed class NonValueToken (string text, TokenType type) : Token
+internal sealed class NonValueToken (TokenType type, int position, string valueString)
+	: Token(type, position, valueString)
 {
-
-	public override string Text { get; set; } = text;
-
-	public override TokenType Type { get; set; } = type;
-
 	public override string ToString() => Type.ToString();
+}
+
+internal abstract class Expression
+{
+	public abstract TokenType Type { get; }
+}
+
+internal sealed class NumberExpression(NumberToken token) : Expression
+{
+	public NumberToken Token { get; } = token;
+
+	public override TokenType Type => TokenType.Number;
+}
+
+internal sealed class OperationExpression(NonValueToken token) : Expression
+{
+	public NonValueToken Token { get; } = token;
+
+	public override TokenType Type => TokenType.Number;
+}
+
+internal sealed class BinaryExpression(Expression left, OperationExpression operation, Expression right) : Expression
+{
+	public Expression Left { get; } = left;
+	public OperationExpression Operation { get; } = operation;
+	public Expression Right { get; } = right;
+
+	public override TokenType Type => TokenType.Unknown;
 }
 
 internal sealed class Lexer(string code)
@@ -74,11 +99,11 @@ internal sealed class Lexer(string code)
 
 	private string _code = code;
 
-	private int _index = 0;
+	private int _position;
 
-	private char Current => _index < _code.Length ? _code[_index] : '\0';
+	private char Current => _position < _code.Length ? _code[_position] : '\0';
 
-	private void Next() => _index++;
+	private void Next() => _position++;
 
 	private void SkipWhitespaces()
 	{
@@ -88,7 +113,11 @@ internal sealed class Lexer(string code)
 
 	private readonly HashSet<char> _singleChars = ['+', '-', '*', '/', '(', ')'];
 
+	private readonly HashSet<char> _separatorChars = [' ', '\t', '\r'];
+
 	private bool IsSingleChar(char chr) => _singleChars.Contains(chr);
+
+	private bool IsSeparator(char chr) => _singleChars.Contains(chr) || _separatorChars.Contains(chr);
 
 	public List<Token> Tokenize()
 	{
@@ -110,7 +139,7 @@ internal sealed class Lexer(string code)
 		SkipWhitespaces();
 
 		if (Current == '\0')
-			return new NonValueToken("\0", TokenType.EndOfLine);
+			return new NonValueToken(TokenType.EndOfLine, -1, "\0");
 
 		var numberTokenOpt = ProcessIfNumberToken();
 		if (numberTokenOpt.IsSome)
@@ -131,6 +160,7 @@ internal sealed class Lexer(string code)
 		const char dot = '.';
 		var tokenString = string.Empty;
 		bool hasDot = false;
+		int startPosition = _position;
 
 		do
 		{
@@ -148,7 +178,7 @@ internal sealed class Lexer(string code)
 		if (!float.TryParse(tokenString, NumberStyles.Float, CultureInfo.InvariantCulture, out var tokenValue))
 			throw new Exception();
 
-		return new NumberToken(tokenString, tokenValue);
+		return new NumberToken(tokenString,startPosition, tokenValue);
 	}
 
 	private Option<NonValueToken> ProcessIfSingleCharToken()
@@ -156,19 +186,19 @@ internal sealed class Lexer(string code)
 		if (!IsSingleChar(Current))
 			return Option<NonValueToken>.None;
 
-		NonValueToken singleCharToken = Current switch
+		TokenType singleCharTokenType = Current switch
 		{
-			'+' => new NonValueToken("+", TokenType.Plus),
-			'-' => new NonValueToken("-", TokenType.Minus),
-			'*' => new NonValueToken("-", TokenType.Multiply),
-			'/' => new NonValueToken("-", TokenType.Divide),
-			'(' => new NonValueToken("(", TokenType.OpenParenthesis),
-			')' => new NonValueToken(")", TokenType.CloseParenthesis),
+			'+' => TokenType.Plus,
+			'-' => TokenType.Minus,
+			'*' => TokenType.Multiply,
+			'/' => TokenType.Divide,
+			'(' => TokenType.OpenParenthesis,
+			')' => TokenType.CloseParenthesis,
 			_ => throw new Exception()
 		};
 
 		Next();
 
-		return singleCharToken;
+		return new NonValueToken(singleCharTokenType, _position, Current.ToString());
 	}
 }
