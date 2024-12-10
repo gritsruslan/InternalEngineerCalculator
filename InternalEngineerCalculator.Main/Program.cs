@@ -35,7 +35,9 @@ public enum TokenType
 	CloseParenthesis,
 	Dot,
 	EndOfLine,
-	Unknown
+	Unknown,
+
+	BinaryExpression
 }
 
 internal abstract class Token(TokenType type, int position, string valueString)
@@ -83,18 +85,23 @@ internal sealed class BinaryExpression(Expression left, NonValueToken operation,
 	public NonValueToken Operation { get; } = operation;
 	public Expression Right { get; } = right;
 
-	public override TokenType Type => TokenType.Unknown;
+	public override TokenType Type => TokenType.BinaryExpression;
 }
 
 internal sealed class Parser(List<Token> tokens)
 {
 	private List<Token> _tokens = tokens;
 
-	private int _position = 0;
+	private int _position;
 
 	private Token Current => _tokens[_position];
 
-	private void Next() => _position++;
+	private Token NextToken()
+	{
+		var current = Current;
+		_position++;
+		return current;
+	}
 
 	public Expression ParseExpression()
 	{
@@ -102,8 +109,8 @@ internal sealed class Parser(List<Token> tokens)
 
 		while (Current.Type is TokenType.Plus or TokenType.Minus)
 		{
-			var operatorToken = Current as NonValueToken;
-			Next();
+			if (NextToken() is not NonValueToken operatorToken)
+				throw new Exception();
 
 			var right = ParseTerm();
 
@@ -119,9 +126,8 @@ internal sealed class Parser(List<Token> tokens)
 
 		while (Current.Type is TokenType.Multiply or TokenType.Divide)
 		{
-			var operatorToken = Current as NonValueToken;
-
-			Next();
+			if (NextToken() is not NonValueToken operatorToken)
+				throw new Exception();
 
 			var right = ParsePrimary();
 
@@ -135,24 +141,26 @@ internal sealed class Parser(List<Token> tokens)
 	{
 		if (Current.Type == TokenType.OpenParenthesis)
 		{
-			Next();
+			NextToken();
 
 			var expression = ParseExpression();
 
 			if (Current.Type == TokenType.CloseParenthesis)
-				Next();
+				NextToken();
 			else
 				throw new Exception();
 
 			return expression;
 		}
 
-		var floatToken = new NumberExpression(Current as NumberToken);
-		return floatToken;
+		if (Current is not NumberToken floatToken)
+			throw new Exception();
+
+		var floatExpression = new NumberExpression(floatToken);
+		return floatExpression;
 	}
+
 }
-
-
 
 
 internal sealed class Evaluator
