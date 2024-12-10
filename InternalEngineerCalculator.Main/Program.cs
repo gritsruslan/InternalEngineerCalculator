@@ -81,7 +81,7 @@ internal sealed class OperationExpression(NonValueToken token) : Expression
 {
 	public NonValueToken Token { get; } = token;
 
-	public override TokenType Type => TokenType.Number;
+	public override TokenType Type => Token.Type;
 }
 
 internal sealed class BinaryExpression(Expression left, OperationExpression operation, Expression right) : Expression
@@ -91,6 +91,32 @@ internal sealed class BinaryExpression(Expression left, OperationExpression oper
 	public Expression Right { get; } = right;
 
 	public override TokenType Type => TokenType.Unknown;
+}
+
+internal sealed class Evaluator
+{
+	public float Evaluate(Expression expression)
+	{
+		if (expression is NumberExpression ne)
+			return ne.Token.Value;
+
+		var binExpression = expression as BinaryExpression;
+
+		var left = Evaluate(binExpression!.Left);
+		var operation = binExpression.Operation;
+		var right = Evaluate(binExpression!.Right);
+
+		float result = operation.Type switch
+		{
+			TokenType.Plus => left + right,
+			TokenType.Minus => left - right,
+			TokenType.Multiply => left * right,
+			TokenType.Divide => left / right,
+			_ => throw new Exception()
+		};
+
+		return result;
+	}
 }
 
 internal sealed class Lexer(string code)
