@@ -93,6 +93,76 @@ internal sealed class BinaryExpression(Expression left, OperationExpression oper
 	public override TokenType Type => TokenType.Unknown;
 }
 
+internal sealed class Parser(List<Token> tokens)
+{
+	private List<Token> _tokens = tokens;
+
+	private int _position = 0;
+
+	private Token Current => _tokens[_position];
+
+	private void Next() => _position++;
+
+	public Expression ParseExpression()
+	{
+		var left = ParseTerm();
+
+		while (Current.Type is TokenType.Plus or TokenType.Minus)
+		{
+			var operatorToken = Current as NonValueToken;
+			Next();
+
+			var right = ParseTerm();
+
+			left = new BinaryExpression(left, new OperationExpression(operatorToken), right);
+		}
+
+		return left;
+	}
+
+	private Expression ParseTerm()
+	{
+		var left = ParsePrimary();
+
+		while (Current.Type is TokenType.Multiply or TokenType.Divide)
+		{
+			var operatorToken = Current as NonValueToken;
+			Next();
+
+			var right = ParsePrimary();
+
+			left = new BinaryExpression(left, new OperationExpression(operatorToken), right);
+		}
+
+		return left;
+	}
+
+	private Expression ParsePrimary()
+	{
+		if (Current.Type == TokenType.OpenParenthesis)
+		{
+			Next();
+
+			var expression = ParseExpression();
+
+			if (Current.Type == TokenType.CloseParenthesis)
+				Next();
+			else
+				throw new Exception();
+
+			return expression;
+		}
+
+		var floatToken = new NumberExpression(Current as NumberToken);
+		return floatToken;
+	}
+
+
+}
+
+
+
+
 internal sealed class Evaluator
 {
 	public float Evaluate(Expression expression)
