@@ -56,7 +56,8 @@ public enum TokenType
 	EndOfLine,
 	Unknown,
 
-	BinaryExpression
+	BinaryExpression,
+	UnaryOperation
 }
 
 internal abstract class Token(TokenType type, int position, string valueString)
@@ -98,6 +99,14 @@ internal sealed class NumberExpression(NumberToken token) : Expression
 	public override TokenType Type => TokenType.Number;
 }
 
+internal sealed class UnaryExpression(Expression expression, NonValueToken unaryOperation) : Expression
+{
+	public Expression Expression { get; set; } = expression;
+
+	public NonValueToken UnaryOperation { get; set; } = unaryOperation;
+
+	public override TokenType Type => TokenType.UnaryOperation;
+}
 internal sealed class BinaryExpression(Expression left, NonValueToken operation, Expression right) : Expression
 {
 	public Expression Left { get; } = left;
