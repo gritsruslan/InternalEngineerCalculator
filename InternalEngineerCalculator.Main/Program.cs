@@ -19,7 +19,7 @@ static class Program
 
 			var evaluator = new Evaluator();
 			var parser = new Parser(tokens);
-			var expr = parser.ParseExpression();
+			var expr = parser.ParseExpressionMain();
 
 			if (expr is NumberExpression num)
 			{
@@ -142,42 +142,43 @@ internal sealed class Parser
 		_tokens = tokens;
 	}
 
-	public Expression ParseExpression()
+	public Expression ParseExpressionMain(int parentPrecedence = 0)
 	{
-		Expression left = ParseMultiplyDivide();
+		var left = ParseParenthesis();
 
-		while (Current?.Type is TokenType.Plus or TokenType.Minus)
+		while (true)
 		{
+			if(Current is null)
+				break;
 
-			var operToken = Current as NonValueToken;
+			if (Current is not NonValueToken operatorToken)
+				throw new Exception($"Unexpected operator : {Current}");
+
+			var precedence = GetOperationPrecedence(operatorToken);
+
+			if (precedence == 0 || precedence <= parentPrecedence)
+				break;
+
 			Next();
-
-			if (Current == null)
-				throw new Exception("Binary operator without second operand!");
-
-			var right = ParseMultiplyDivide();
-			left = new BinaryExpression(left, operToken!, right);
+			var right = ParseExpressionMain(precedence);
+			left = new BinaryExpression(left, operatorToken, right);
 		}
 
 		return left;
 	}
 
-	private Expression ParseMultiplyDivide()
+	private static int GetOperationPrecedence(NonValueToken token)
 	{
-		var left = ParseParenthesis();
-
-		while (Current?.Type is TokenType.Multiply or TokenType.Divide)
+		return token.Type switch
 		{
-			var operToken = Current as NonValueToken;
-			Next();
+			TokenType.Plus => 1,
+			TokenType.Minus => 1,
 
-			if (Current == null)
-				throw new Exception("Binary operator without second operand!");
+			TokenType.Multiply => 2,
+			TokenType.Divide => 2,
 
-			var right = ParseParenthesis();
-			left = new BinaryExpression(left, operToken!, right);
-		}
-		return left;
+			_ => 0
+		};
 	}
 
 	private Expression ParseParenthesis()
@@ -189,7 +190,7 @@ internal sealed class Parser
 		if (Current.Type == TokenType.OpenParenthesis)
 		{
 			Next();
-			expr = ParseExpression();
+			expr = ParseExpressionMain();
 
 			if (Current == null || Current.Type != TokenType.CloseParenthesis)
 				throw new Exception($"Unexpected token : {Current}, expected CloseParenthesis");
