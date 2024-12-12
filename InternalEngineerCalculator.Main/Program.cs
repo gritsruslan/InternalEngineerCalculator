@@ -17,19 +17,24 @@ static class Program
 
 			var tokens = new Lexer(code).Tokenize();
 
-			/*
-			foreach (var token in tokens)
-				Console.WriteLine(token.ToString());
-			*/
-
 			var evaluator = new Evaluator();
 			var parser = new Parser(tokens);
 			var expr = parser.ParseExpression();
-			var binExpr = expr as BinaryExpression;
-			var str = binExpr!.ToCustomString(new StringBuilder(), "");
 
-			Console.WriteLine(str);
-			Console.WriteLine("Result : " + evaluator.Evaluate(binExpr));
+			if (expr is NumberExpression num)
+			{
+				Console.WriteLine($"Number : {num.Token.Value}");
+			}
+			else if(expr is BinaryExpression be)
+			{
+				Console.WriteLine(be);
+				var str = be!.ToCustomString(new StringBuilder(), "");
+
+				Console.WriteLine(str);
+				Console.WriteLine("Result : " + evaluator.Evaluate(be));
+			}
+
+
 		}
 	}
 
@@ -122,88 +127,85 @@ internal sealed class BinaryExpression(Expression left, NonValueToken operation,
 	public override TokenType Type => TokenType.BinaryExpression;
 }
 
+//test
 internal sealed class Parser
 {
-	private readonly List<Token> _tokens;
-	private int _position;
+	private List<Token> _tokens;
 
-	public Parser(List<Token> tokens)
-	{
-		_tokens = tokens ?? throw new ArgumentNullException(nameof(tokens));
-	}
+	private int _position = 0;
 
 	private Token? Current => _position < _tokens.Count ? _tokens[_position] : null;
 
-	private Token NextToken()
+	private void Next() => _position++;
+	public Parser(List<Token> tokens)
 	{
-		var current = Current;
-		if (_position < _tokens.Count)
-			_position++;
-		return current;
+		_tokens = tokens;
 	}
 
 	public Expression ParseExpression()
 	{
-		var left = ParseTerm();
+		Expression left = ParseMultiplyDivide();
 
 		while (Current?.Type is TokenType.Plus or TokenType.Minus)
 		{
-			if (Current is not NonValueToken operatorToken)
-				throw new Exception("Expected an operator.");
 
-			NextToken();
-			var right = ParseTerm();
-			left = new BinaryExpression(left, operatorToken, right);
+			var operToken = Current as NonValueToken;
+			Next();
+
+			if (Current == null)
+				throw new Exception("Binary operator without second operand!");
+
+			var right = ParseMultiplyDivide();
+			left = new BinaryExpression(left, operToken!, right);
 		}
 
 		return left;
 	}
 
-	private Expression ParseTerm()
+	private Expression ParseMultiplyDivide()
 	{
-		var left = ParsePrimary();
+		var left = ParseParenthesis();
 
 		while (Current?.Type is TokenType.Multiply or TokenType.Divide)
 		{
-			if (Current is not NonValueToken operatorToken)
-				throw new Exception("Expected an operator.");
+			var operToken = Current as NonValueToken;
+			Next();
 
-			NextToken();
-			var right = ParsePrimary();
-			left = new BinaryExpression(left, operatorToken, right);
+			if (Current == null)
+				throw new Exception("Binary operator without second operand!");
+
+			var right = ParseParenthesis();
+			left = new BinaryExpression(left, operToken!, right);
 		}
-
 		return left;
 	}
 
-	private Expression ParsePrimary()
+	private Expression ParseParenthesis()
 	{
 		if (Current == null)
-			throw new Exception("Unexpected end of input.");
+			throw new Exception("Unexpected end of input!");
 
+		Expression expr;
 		if (Current.Type == TokenType.OpenParenthesis)
 		{
-			NextToken();
-			var expression = ParseExpression();
+			Next();
+			expr = ParseExpression();
 
-			if (Current?.Type != TokenType.CloseParenthesis)
-				throw new Exception("Expected closing parenthesis.");
+			if (Current == null || Current.Type != TokenType.CloseParenthesis)
+				throw new Exception($"Unexpected token : {Current}, expected CloseParenthesis");
 
-			NextToken();
-			return expression;
+			Next();
+			return expr;
 		}
 
-		if (Current is NumberToken numberToken)
-		{
-			NextToken();
-			return new NumberExpression(numberToken);
-		}
+		if (Current is not NumberToken numberToken)
+			throw new Exception($"Unexpected token : {Current}, expected NumberToken");
 
-		throw new Exception($"Unexpected token: {Current}");
+		Next();
+		expr = new NumberExpression(numberToken);
+		return expr;
 	}
 }
-
-
 
 internal sealed class Evaluator
 {
