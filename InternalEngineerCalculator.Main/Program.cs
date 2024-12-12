@@ -42,9 +42,6 @@ static class Program
 
 		}
 	}
-
-
-
 }
 
 public enum TokenType
@@ -55,6 +52,7 @@ public enum TokenType
 	Minus,
 	Divide,
 	Multiply,
+	Pow,
 	OpenParenthesis,
 	CloseParenthesis,
 	Dot,
@@ -78,10 +76,10 @@ internal abstract class Token(TokenType type, int position, string valueString)
 	public override string ToString() => nameof(TokenType);
 }
 
-internal sealed class NumberToken(string valueString, int position, float value)
+internal sealed class NumberToken(string valueString, int position, double value)
 	: Token(TokenType.Number, position, valueString)
 {
-	public float Value => value;
+	public double Value => value;
 
 	public override string ToString() => $"{nameof(NumberToken)} : {Value}";
 }
@@ -212,6 +210,8 @@ internal sealed class Parser
 			TokenType.Multiply => 2,
 			TokenType.Divide => 2,
 
+			TokenType.Pow => 3,
+
 			_ => 0
 		};
 	}
@@ -245,7 +245,7 @@ internal sealed class Parser
 
 internal sealed class Evaluator
 {
-	public float Evaluate(Expression expression)
+	public double Evaluate(Expression expression)
 	{
 		if (expression is NumberExpression ne)
 			return ne.Token.Value;
@@ -266,12 +266,13 @@ internal sealed class Evaluator
 		var operation = binExpression.Operation;
 		var right = Evaluate(binExpression!.Right);
 
-		float result = operation.Type switch
+		double result = operation.Type switch
 		{
 			TokenType.Plus => left + right,
 			TokenType.Minus => left - right,
 			TokenType.Multiply => left * right,
-			TokenType.Divide => left / right,
+			TokenType.Divide => right == 0 ? throw new DivideByZeroException() : left/right,
+			TokenType.Pow => Math.Pow(left, right),
 			_ => throw new Exception()
 		};
 
@@ -297,7 +298,7 @@ internal sealed class Lexer(string code)
 			Next();
 	}
 
-	private readonly HashSet<char> _singleChars = ['+', '-', '*', '/', '(', ')'];
+	private readonly HashSet<char> _singleChars = ['+', '-', '*', '/', '(', ')', '^'];
 
 	private readonly HashSet<char> _separatorChars = [' ', '\t', '\r'];
 
@@ -361,7 +362,7 @@ internal sealed class Lexer(string code)
 		}
 		while (char.IsDigit(Current) || Current == dot);
 
-		if (!float.TryParse(tokenString, NumberStyles.Float, CultureInfo.InvariantCulture, out var tokenValue))
+		if (!double.TryParse(tokenString, NumberStyles.Float, CultureInfo.InvariantCulture, out var tokenValue))
 			throw new Exception();
 
 		return new NumberToken(tokenString,startPosition, tokenValue);
@@ -380,6 +381,7 @@ internal sealed class Lexer(string code)
 			'/' => TokenType.Divide,
 			'(' => TokenType.OpenParenthesis,
 			')' => TokenType.CloseParenthesis,
+			'^' => TokenType.Pow,
 			_ => throw new Exception()
 		};
 
