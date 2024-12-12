@@ -19,7 +19,7 @@ static class Program
 
 			var evaluator = new Evaluator();
 			var parser = new Parser(tokens);
-			var expr = parser.ParseExpressionMain();
+			var expr = parser.ParseExpression();
 
 			if (expr is NumberExpression num)
 			{
@@ -32,6 +32,11 @@ static class Program
 
 				Console.WriteLine(str);
 				Console.WriteLine("Result : " + evaluator.Evaluate(be));
+			}
+			else if (expr is UnaryExpression ue)
+			{
+				Console.WriteLine("UnaryExpression :");
+				Console.WriteLine("Result : " + evaluator.Evaluate(ue));
 			}
 
 
@@ -99,7 +104,7 @@ internal sealed class NumberExpression(NumberToken token) : Expression
 	public override TokenType Type => TokenType.Number;
 }
 
-internal sealed class UnaryExpression(Expression expression, NonValueToken unaryOperation) : Expression
+internal sealed class UnaryExpression(NonValueToken unaryOperation, Expression expression) : Expression
 {
 	public Expression Expression { get; set; } = expression;
 
@@ -151,9 +156,21 @@ internal sealed class Parser
 		_tokens = tokens;
 	}
 
-	public Expression ParseExpressionMain(int parentPrecedence = 0)
+	public Expression ParseExpression(int parentPrecedence = 0)
 	{
-		var left = ParseParenthesis();
+		Expression left;
+		var unaryOperatorPrecedence = GetUnaryOperatorPrecedence(Current!);
+		if (unaryOperatorPrecedence != 0 && unaryOperatorPrecedence >= parentPrecedence)
+		{
+			var operatorToken = Current as NonValueToken;
+			Next();
+			var operand = ParseExpression(unaryOperatorPrecedence);
+			left = new UnaryExpression(operatorToken!, operand);
+		}
+		else
+		{
+			left = ParseParenthesis();
+		}
 
 		while (true)
 		{
@@ -169,13 +186,22 @@ internal sealed class Parser
 				break;
 
 			Next();
-			var right = ParseExpressionMain(precedence);
+			var right = ParseExpression(precedence);
 			left = new BinaryExpression(left, operatorToken, right);
 		}
 
 		return left;
 	}
 
+	private static int GetUnaryOperatorPrecedence(Token token)
+	{
+		return token.Type switch
+		{
+			TokenType.Plus => 3,
+			TokenType.Minus => 3,
+			_ => 0
+		};
+	}
 	private static int GetOperationPrecedence(NonValueToken token)
 	{
 		return token.Type switch
@@ -199,7 +225,7 @@ internal sealed class Parser
 		if (Current.Type == TokenType.OpenParenthesis)
 		{
 			Next();
-			expr = ParseExpressionMain();
+			expr = ParseExpression();
 
 			if (Current == null || Current.Type != TokenType.CloseParenthesis)
 				throw new Exception($"Unexpected token : {Current}, expected CloseParenthesis");
@@ -223,6 +249,16 @@ internal sealed class Evaluator
 	{
 		if (expression is NumberExpression ne)
 			return ne.Token.Value;
+
+		if (expression is UnaryExpression ue)
+		{
+			var expr = Evaluate(ue.Expression);
+
+			if (ue.UnaryOperation.Type == TokenType.Minus)
+				expr *= -1;
+			// Other unary operators
+			return expr;
+		}
 
 		var binExpression = expression as BinaryExpression;
 
