@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using InternalEngineerCalculator.Main.Common;
 
@@ -8,41 +9,89 @@ static class Program
 {
 	private static void Main()
 	{
-		while (true)
-		{
-			Console.Write("> ");
-			var code = Console.ReadLine();
-			if (code is null)
-				continue;
-
-			var tokens = new Lexer(code).Tokenize();
-
-			var evaluator = new Evaluator();
-			var parser = new Parser(tokens);
-			var expr = parser.ParseExpression();
-
-			if (expr is NumberExpression num)
-			{
-				Console.WriteLine($"Number : {num.Token.Value}");
-			}
-			else if(expr is BinaryExpression be)
-			{
-				Console.WriteLine(be);
-				var str = be!.ToCustomString(new StringBuilder(), "");
-
-				Console.WriteLine(str);
-				Console.WriteLine("Result : " + evaluator.Evaluate(be));
-			}
-			else if (expr is UnaryExpression ue)
-			{
-				Console.WriteLine("UnaryExpression :");
-				Console.WriteLine("Result : " + evaluator.Evaluate(ue));
-			}
-
-
-		}
+		var Iec = new InternalEngineerCalculator();
+#if DEBUG
+		Iec.StartDebug();
+#else
+		Iec.Start();
+#endif
 	}
 }
+
+internal class InternalEngineerCalculator
+{
+	private readonly ConsoleColor DefaultColor = ConsoleColor.Gray;
+
+	public void Start()
+	{
+		Console.WriteLine("InternalEngineerCalculator by @gritsruslan!");
+		while (true)
+		{
+			try
+			{
+				Console.Write("> ");
+				var input = Console.ReadLine();
+
+				if (string.IsNullOrWhiteSpace(input))
+					continue;
+
+				var lexemes = new Lexer(input).Tokenize();
+				var parser = new Parser(lexemes);
+				var expression = parser.ParseExpression();
+				var evaluator = new Evaluator();
+				var result = evaluator.Evaluate(expression);
+
+				Console.WriteLine($"Result : {result}");
+			}
+			catch (CalculatorException exception)
+			{
+				Console.ForegroundColor = ConsoleColor.DarkMagenta;
+				Console.WriteLine(exception.Message);
+				Console.WriteLine();
+				Console.ForegroundColor = DefaultColor;
+			}
+			catch (Exception exception)
+			{
+				Console.ForegroundColor = ConsoleColor.DarkRed;
+				Console.WriteLine("An unhandled error occurred while the program was running. Please contact us!");
+				Console.WriteLine();
+				Console.ForegroundColor = DefaultColor;
+			}
+		}
+	}
+
+#if DEBUG
+	public void StartDebug()
+	{
+		Console.WriteLine("InternalEngineerCalculator by @gritsruslan! : DEBUG_MODE");
+		while (true)
+		{
+			try
+			{
+				Console.Write("> ");
+				var input = Console.ReadLine();
+
+				if (string.IsNullOrWhiteSpace(input))
+					continue;
+
+				var lexemes = new Lexer(input).Tokenize();
+				var parser = new Parser(lexemes);
+				var expression = parser.ParseExpression();
+				var evaluator = new Evaluator();
+				var result = evaluator.Evaluate(expression);
+
+				Console.WriteLine($"Result : {result}");
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e);
+			}
+		}
+	}
+#endif
+}
+
+internal class CalculatorException(string message) : Exception(message);
 
 public enum TokenType
 {
