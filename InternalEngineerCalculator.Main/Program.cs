@@ -395,7 +395,7 @@ internal sealed class Lexer(string code)
 
 	private readonly HashSet<char> _singleChars = ['+', '-', '*', '/', '(', ')', '^'];
 
-	private readonly HashSet<char> _separatorChars = [' ', '\t', '\r'];
+	private readonly HashSet<char> _separatorChars = [' ', '\t', '\r', '\0'];
 
 	private bool IsSingleChar(char chr) => _singleChars.Contains(chr);
 
@@ -492,7 +492,10 @@ internal sealed class Lexer(string code)
 		StringBuilder sb = new StringBuilder();
 		int startPosition = _position;
 		while (!IsSeparator(Current))
+		{
 			sb.Append(Current);
+			Next();
+		}
 
 		return new NonValueToken(TokenType.Identifier, startPosition, sb.ToString());
 	}
