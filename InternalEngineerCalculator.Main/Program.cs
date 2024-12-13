@@ -84,7 +84,7 @@ internal class InternalEngineerCalculator
 			}
 			catch (Exception e)
 			{
-				Console.WriteLine(e);
+				Console.WriteLine(e.Message);
 			}
 		}
 	}
@@ -92,6 +92,26 @@ internal class InternalEngineerCalculator
 }
 
 internal class CalculatorException(string message) : Exception(message);
+
+internal sealed class CalculatorDivideByZeroException() : CalculatorException("Divide by zero is not allowed!");
+/*
+
+internal sealed class UnexpectedOperatorException(TokenType received, TokenType expected)
+	: CalculatorException($"Unexpected operator {received}. Expected : {expected}");
+*/
+
+internal sealed class UnexpectedTokenException : CalculatorException
+{
+	public UnexpectedTokenException(string message) : base(message){}
+
+	public UnexpectedTokenException(string received, string expected) : base(
+		$"Unexpected operator {received}, expected : {expected}") {}
+
+	public UnexpectedTokenException(TokenType received, TokenType expected) : base(
+		$"Unexpected operator {received}, expected : {expected}") {}
+}
+
+internal sealed class EndOfInputException() : Exception("Unexpected end of input!");
 
 public enum TokenType
 {
@@ -104,9 +124,8 @@ public enum TokenType
 	Pow,
 	OpenParenthesis,
 	CloseParenthesis,
-	Dot,
 	EndOfLine,
-	Unknown,
+	Identifier,
 
 	BinaryExpression,
 	UnaryOperation
@@ -122,7 +141,7 @@ internal abstract class Token(TokenType type, int position, string valueString)
 
 	public int Length => ValueString.Length;
 
-	public override string ToString() => nameof(TokenType);
+	public override string ToString() => Type.ToString();
 }
 
 internal sealed class NumberToken(string valueString, int position, double value)
@@ -188,7 +207,6 @@ internal sealed class BinaryExpression(Expression left, NonValueToken operation,
 	public override TokenType Type => TokenType.BinaryExpression;
 }
 
-//test
 internal sealed class Parser
 {
 	private List<Token> _tokens;
@@ -225,7 +243,7 @@ internal sealed class Parser
 				break;
 
 			if (Current is not NonValueToken operatorToken)
-				throw new Exception($"Unexpected operator : {Current}");
+				throw new UnexpectedTokenException(Current.Type.ToString(), "math operator");
 
 			var precedence = GetOperationPrecedence(operatorToken);
 
@@ -268,7 +286,7 @@ internal sealed class Parser
 	private Expression ParseParenthesis()
 	{
 		if (Current == null)
-			throw new Exception("Unexpected end of input!");
+			throw new EndOfInputException();
 
 		Expression expr;
 		if (Current.Type == TokenType.OpenParenthesis)
@@ -276,15 +294,18 @@ internal sealed class Parser
 			Next();
 			expr = ParseExpression();
 
-			if (Current == null || Current.Type != TokenType.CloseParenthesis)
-				throw new Exception($"Unexpected token : {Current}, expected CloseParenthesis");
+			if (Current == null)
+				throw new EndOfInputException();
+
+			if (Current.Type != TokenType.CloseParenthesis)
+				throw new UnexpectedTokenException(Current.Type,TokenType.CloseParenthesis );
 
 			Next();
 			return expr;
 		}
 
 		if (Current is not NumberToken numberToken)
-			throw new Exception($"Unexpected token : {Current}, expected NumberToken");
+			throw new UnexpectedTokenException(Current.Type,TokenType.CloseParenthesis);
 
 		Next();
 		expr = new NumberExpression(numberToken);
@@ -320,9 +341,9 @@ internal sealed class Evaluator
 			TokenType.Plus => left + right,
 			TokenType.Minus => left - right,
 			TokenType.Multiply => left * right,
-			TokenType.Divide => right == 0 ? throw new DivideByZeroException() : left/right,
+			TokenType.Divide => right == 0 ? throw new CalculatorDivideByZeroException() : left/right,
 			TokenType.Pow => Math.Pow(left, right),
-			_ => throw new Exception()
+			_ => throw new CalculatorException("Unknown math operator!")
 		};
 
 		return result;
@@ -385,7 +406,9 @@ internal sealed class Lexer(string code)
 		if (singleCharToken.IsSome)
 			return singleCharToken.Unwrap();
 
-		throw new Exception("Unknown Token");
+		var identifierToken = ProcessIdentifier();
+
+		throw new CalculatorException($"Unknown token {identifierToken}");
 	}
 
 	private Option<NumberToken> ProcessIfNumberToken()
@@ -403,16 +426,16 @@ internal sealed class Lexer(string code)
 			if (Current == dot && !hasDot)
 				hasDot = true;
 			else if (Current == dot && hasDot)
-				throw new Exception();
+				throw new CalculatorException("Invalid number token!");
 
 			tokenString += Current;
 
-			 Next();
+			Next();
 		}
 		while (char.IsDigit(Current) || Current == dot);
 
 		if (!double.TryParse(tokenString, NumberStyles.Float, CultureInfo.InvariantCulture, out var tokenValue))
-			throw new Exception();
+			throw new Exception($"The entry \"{tokenString}\" cannot be represented as a number.");
 
 		return new NumberToken(tokenString,startPosition, tokenValue);
 	}
@@ -431,11 +454,21 @@ internal sealed class Lexer(string code)
 			'(' => TokenType.OpenParenthesis,
 			')' => TokenType.CloseParenthesis,
 			'^' => TokenType.Pow,
-			_ => throw new Exception()
+			_ => throw new CalculatorException("Unknown single char operator!")
 		};
 
 		Next();
 
 		return new NonValueToken(singleCharTokenType, _position, Current.ToString());
+	}
+
+	private NonValueToken ProcessIdentifier()
+	{
+		StringBuilder sb = new StringBuilder();
+		int startPosition = _position;
+		while (!IsSeparator(Current))
+			sb.Append(Current);
+
+		return new NonValueToken(TokenType.Identifier, startPosition, sb.ToString());
 	}
 }
