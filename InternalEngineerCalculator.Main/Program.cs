@@ -21,6 +21,8 @@ internal class InternalEngineerCalculator
 {
 	public readonly ConsoleColor DefaultColor = ConsoleColor.Gray;
 
+	private bool _showExpressionTree = false;
+
 	public void Start()
 	{
 		Console.WriteLine("InternalEngineerCalculator by @gritsruslan!");
@@ -97,7 +99,8 @@ internal class InternalEngineerCalculator
 
 	private void ProcessCommandLine(string commandLine)
 	{
-		var commandLineNames = commandLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+		var commandLineNames =
+			commandLine.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(str => str.ToLower()).ToArray();
 		var command = commandLineNames[0];
 
 		if(command == "#exit")
@@ -110,15 +113,27 @@ internal class InternalEngineerCalculator
 				"""
 
 				InternalEngineerCalculator by @gritsruslan!
+
 				Available math operators : + - * / ^
 				Examples:
 				12 + 3 * (2 - 1)
 				2 ^ 3 + 52
 				1/20 + 1
 
+				Available commands :
+				#exit - exit calculator
+				#clear - clear console output
+				#help - output short calculator guide
+				#showexpressiontree - enable showing expression trees
+				#unshowexpressiontree - disable showing expression trees
+
 				""";
 			Console.WriteLine(helpString);
 		}
+		else if (command == "#showexpressiontree")
+			_showExpressionTree = true;
+		else if (command == "#unshowexpressiontree")
+			_showExpressionTree = false;
 		else
 		{
 			Console.WriteLine($"Unknown command : {command}");
