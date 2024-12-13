@@ -19,7 +19,7 @@ static class Program
 
 internal class InternalEngineerCalculator
 {
-	private readonly ConsoleColor DefaultColor = ConsoleColor.Gray;
+	public readonly ConsoleColor DefaultColor = ConsoleColor.Gray;
 
 	public void Start()
 	{
@@ -33,6 +33,12 @@ internal class InternalEngineerCalculator
 
 				if (string.IsNullOrWhiteSpace(input))
 					continue;
+
+				if (input[0] == '#')
+				{
+					ProcessCommandLine(input);
+					continue;
+				}
 
 				var lexemes = new Lexer(input).Tokenize();
 				var parser = new Parser(lexemes);
@@ -88,6 +94,21 @@ internal class InternalEngineerCalculator
 		}
 	}
 #endif
+
+	private void ProcessCommandLine(string commandLine)
+	{
+		var commandLineNames = commandLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+		var command = commandLineNames[0];
+
+		if(command == "#exit")
+			Environment.Exit(0);
+		else if(command == "clear")
+			Console.Clear();
+		else
+		{
+			Console.WriteLine($"Unknown command : {command}");
+		}
+	}
 }
 
 internal class CalculatorException(string message) : Exception(message);
