@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 using InternalEngineerCalculator.Main.Common;
 
@@ -184,27 +183,32 @@ internal sealed class BinaryExpression(Expression left, NonValueToken operation,
 	public NonValueToken Operation { get; } = operation;
 	public Expression Right { get; } = right;
 
-	public string ToCustomString(StringBuilder sb, string offset)
-	{
-		sb.Append(offset + "BinaryExpression\n");
-		offset += "	";
-
-		if (Left is BinaryExpression leftExpr)
-			leftExpr.ToCustomString(sb, offset);
-		else if (Left is NumberExpression leftNum)
-			sb.Append(offset + leftNum.Token + "\n");
-
-		sb.Append(offset + Operation + " " + Operation.ValueString + "\n");
-
-		if (Right is BinaryExpression rightExpr)
-			rightExpr.ToCustomString(sb, offset);
-		else if (Right is NumberExpression rightNum)
-			sb.Append(offset + rightNum.Token + "\n");
-
-		return sb.ToString();
-	}
-
 	public override TokenType Type => TokenType.BinaryExpression;
+}
+
+internal static class ExpressionExtensions
+{
+	public static void PrettyPrint(this Expression expression, string offset = "")
+	{
+		if(expression is NumberExpression numberExpression)
+			Console.WriteLine(offset + $"Number : {numberExpression.Token.ValueString}");
+
+		if (expression is UnaryExpression unaryExpression)
+		{
+			offset += "  ";
+			Console.WriteLine(offset + $"Operation {unaryExpression.UnaryOperation.ValueString}");
+			unaryExpression.Expression.PrettyPrint(offset);
+		}
+
+		if (expression is BinaryExpression binaryExpression)
+		{
+			Console.WriteLine(offset + "Binary Expression");
+			offset += "  ";
+			binaryExpression.Left.PrettyPrint(offset);
+			Console.WriteLine(offset + $"Operation {binaryExpression.Operation.ValueString}");
+			binaryExpression.Right.PrettyPrint(offset);
+		}
+	}
 }
 
 internal sealed class Parser
