@@ -8,11 +8,11 @@ static class Program
 {
 	private static void Main()
 	{
-		var Iec = new InternalEngineerCalculator();
+		var internalEngineerCalculator = new InternalEngineerCalculator();
 #if DEBUG
-		Iec.StartDebug();
+		internalEngineerCalculator.StartDebug();
 #else
-		Iec.Start();
+		internalEngineerCalculator.Start();
 #endif
 	}
 }
@@ -21,7 +21,7 @@ internal class InternalEngineerCalculator
 {
 	public readonly ConsoleColor DefaultColor = ConsoleColor.Gray;
 
-	private bool _showExpressionTree = false;
+	private bool _showExpressionTree;
 
 #if DEBUG
 	public void StartDebug()
@@ -95,7 +95,7 @@ internal class InternalEngineerCalculator
 			catch (Exception exception)
 			{
 				Console.ForegroundColor = ConsoleColor.DarkRed;
-				Console.WriteLine("An unhandled error occurred while the program was running. Please contact us!");
+				Console.WriteLine("An unhandled error occurred while the program was running. Please contact @gritsruslan!");
 				Console.WriteLine();
 				Console.ForegroundColor = DefaultColor;
 			}
@@ -136,9 +136,15 @@ internal class InternalEngineerCalculator
 			Console.WriteLine(helpString);
 		}
 		else if (command == "#showexpressiontree")
+		{
+			Console.WriteLine("Display expression tree is enabled!");
 			_showExpressionTree = true;
+		}
 		else if (command == "#unshowexpressiontree")
+		{
+			Console.WriteLine("Display expression tree is disabled!");
 			_showExpressionTree = false;
+		}
 		else
 		{
 			Console.WriteLine($"Unknown command : {command}");
@@ -160,7 +166,7 @@ internal sealed class UnexpectedTokenException : CalculatorException
 		$"Unexpected operator {received}, expected : {expected}") {}
 }
 
-internal sealed class EndOfInputException() : Exception("Unexpected end of input!");
+internal sealed class EndOfInputException() : CalculatorException("Unexpected end of input!");
 
 public enum TokenType
 {
@@ -265,7 +271,7 @@ internal sealed class Parser
 {
 	private List<Token> _tokens;
 
-	private int _position = 0;
+	private int _position;
 
 	private Token? Current => _position < _tokens.Count ? _tokens[_position] : null;
 
@@ -362,7 +368,7 @@ internal sealed class Parser
 		}
 
 		if (Current is not NumberToken numberToken)
-			throw new UnexpectedTokenException(Current.Type,TokenType.CloseParenthesis);
+			throw new UnexpectedTokenException(Current.Type,TokenType.Number);
 
 		Next();
 		expr = new NumberExpression(numberToken);
@@ -391,7 +397,7 @@ internal sealed class Evaluator
 
 		var left = Evaluate(binExpression!.Left);
 		var operation = binExpression.Operation;
-		var right = Evaluate(binExpression!.Right);
+		var right = Evaluate(binExpression.Right);
 
 		double result = operation.Type switch
 		{
@@ -492,7 +498,7 @@ internal sealed class Lexer(string code)
 		while (char.IsDigit(Current) || Current == dot);
 
 		if (!double.TryParse(tokenString, NumberStyles.Float, CultureInfo.InvariantCulture, out var tokenValue))
-			throw new Exception($"The entry \"{tokenString}\" cannot be represented as a number.");
+			throw new CalculatorException($"The entry \"{tokenString}\" cannot be represented as a number.");
 
 		return new NumberToken(tokenString,startPosition, tokenValue);
 	}
