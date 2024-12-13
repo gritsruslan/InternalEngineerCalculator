@@ -10,9 +10,9 @@ static class Program
 	{
 		var Iec = new InternalEngineerCalculator();
 #if DEBUG
-		Iec.Start(true)
+		Iec.StartDebug();
 #else
-		Iec.Start(false);
+		Iec.Start();
 #endif
 	}
 }
@@ -23,13 +23,41 @@ internal class InternalEngineerCalculator
 
 	private bool _showExpressionTree = false;
 
-	public void Start(bool isDebugMode)
+#if DEBUG
+	public void StartDebug()
 	{
-		if(!isDebugMode)
-			Console.WriteLine($"InternalEngineerCalculator by @gritsruslan!");
-		else
-			Console.WriteLine($"InternalEngineerCalculator by @gritsruslan! : Debug Mode");
+		Console.WriteLine($"InternalEngineerCalculator by @gritsruslan! : Debug Mode");
+		while (true)
+		{
+			Console.Write("> ");
+			var input = Console.ReadLine();
 
+			if (string.IsNullOrWhiteSpace(input))
+				continue;
+
+			if (input[0] == '#')
+			{
+				ProcessCommandLine(input);
+				continue;
+			}
+
+			var lexemes = new Lexer(input).Tokenize();
+			var parser = new Parser(lexemes);
+			var expression = parser.ParseExpression();
+			var evaluator = new Evaluator();
+			var result = evaluator.Evaluate(expression);
+
+			if(_showExpressionTree)
+				expression.PrettyPrint();
+
+			Console.WriteLine($"Result : {result}");
+		}
+	}
+#endif
+
+	public void Start()
+	{
+		Console.WriteLine($"InternalEngineerCalculator by @gritsruslan!");
 		while (true)
 		{
 			try
@@ -67,12 +95,7 @@ internal class InternalEngineerCalculator
 			catch (Exception exception)
 			{
 				Console.ForegroundColor = ConsoleColor.DarkRed;
-
-				if(!isDebugMode)
-					Console.WriteLine("An unhandled error occurred while the program was running. Please contact us!");
-				else
-					Console.WriteLine(exception);
-
+				Console.WriteLine("An unhandled error occurred while the program was running. Please contact us!");
 				Console.WriteLine();
 				Console.ForegroundColor = DefaultColor;
 			}
@@ -255,7 +278,10 @@ internal sealed class Parser
 	public Expression ParseExpression(int parentPrecedence = 0)
 	{
 		Expression left;
-		var unaryOperatorPrecedence = GetUnaryOperatorPrecedence(Current!);
+		if (Current is null)
+			throw new EndOfInputException();
+
+		var unaryOperatorPrecedence = GetUnaryOperatorPrecedence(Current);
 		if (unaryOperatorPrecedence != 0 && unaryOperatorPrecedence >= parentPrecedence)
 		{
 			var operatorToken = Current as NonValueToken;
@@ -439,7 +465,7 @@ internal sealed class Lexer(string code)
 
 		var identifierToken = ProcessIdentifier();
 
-		throw new CalculatorException($"Unknown token {identifierToken}");
+		throw new CalculatorException($"Unknown identifier \"{identifierToken.ValueString}\"!");
 	}
 
 	private Option<NumberToken> ProcessIfNumberToken()
