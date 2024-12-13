@@ -10,9 +10,9 @@ static class Program
 	{
 		var Iec = new InternalEngineerCalculator();
 #if DEBUG
-		Iec.StartDebug();
+		Iec.Start(true)
 #else
-		Iec.Start();
+		Iec.Start(false);
 #endif
 	}
 }
@@ -23,9 +23,13 @@ internal class InternalEngineerCalculator
 
 	private bool _showExpressionTree = false;
 
-	public void Start()
+	public void Start(bool isDebugMode)
 	{
-		Console.WriteLine("InternalEngineerCalculator by @gritsruslan!");
+		if(!isDebugMode)
+			Console.WriteLine($"InternalEngineerCalculator by @gritsruslan!");
+		else
+			Console.WriteLine($"InternalEngineerCalculator by @gritsruslan! : Debug Mode");
+
 		while (true)
 		{
 			try
@@ -48,6 +52,9 @@ internal class InternalEngineerCalculator
 				var evaluator = new Evaluator();
 				var result = evaluator.Evaluate(expression);
 
+				if(_showExpressionTree)
+					expression.PrettyPrint();
+
 				Console.WriteLine($"Result : {result}");
 			}
 			catch (CalculatorException exception)
@@ -60,42 +67,17 @@ internal class InternalEngineerCalculator
 			catch (Exception exception)
 			{
 				Console.ForegroundColor = ConsoleColor.DarkRed;
-				Console.WriteLine("An unhandled error occurred while the program was running. Please contact us!");
+
+				if(!isDebugMode)
+					Console.WriteLine("An unhandled error occurred while the program was running. Please contact us!");
+				else
+					Console.WriteLine(exception);
+
 				Console.WriteLine();
 				Console.ForegroundColor = DefaultColor;
 			}
 		}
 	}
-
-#if DEBUG
-	public void StartDebug()
-	{
-		Console.WriteLine("InternalEngineerCalculator by @gritsruslan! : DEBUG_MODE");
-		while (true)
-		{
-			try
-			{
-				Console.Write("> ");
-				var input = Console.ReadLine();
-
-				if (string.IsNullOrWhiteSpace(input))
-					continue;
-
-				var lexemes = new Lexer(input).Tokenize();
-				var parser = new Parser(lexemes);
-				var expression = parser.ParseExpression();
-				var evaluator = new Evaluator();
-				var result = evaluator.Evaluate(expression);
-
-				Console.WriteLine($"Result : {result}");
-			}
-			catch (Exception e)
-			{
-				Console.WriteLine(e.Message);
-			}
-		}
-	}
-#endif
 
 	private void ProcessCommandLine(string commandLine)
 	{
