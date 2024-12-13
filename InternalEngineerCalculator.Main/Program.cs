@@ -102,8 +102,23 @@ internal class InternalEngineerCalculator
 
 		if(command == "#exit")
 			Environment.Exit(0);
-		else if(command == "clear")
+		else if(command == "#clear")
 			Console.Clear();
+		else if (command == "#help")
+		{
+			string helpString =
+				"""
+
+				InternalEngineerCalculator by @gritsruslan!
+				Available math operators : + - * / ^
+				Examples:
+				12 + 3 * (2 - 1)
+				2 ^ 3 + 52
+				1/20 + 1
+
+				""";
+			Console.WriteLine(helpString);
+		}
 		else
 		{
 			Console.WriteLine($"Unknown command : {command}");
@@ -114,12 +129,6 @@ internal class InternalEngineerCalculator
 internal class CalculatorException(string message) : Exception(message);
 
 internal sealed class CalculatorDivideByZeroException() : CalculatorException("Divide by zero is not allowed!");
-/*
-
-internal sealed class UnexpectedOperatorException(TokenType received, TokenType expected)
-	: CalculatorException($"Unexpected operator {received}. Expected : {expected}");
-*/
-
 internal sealed class UnexpectedTokenException : CalculatorException
 {
 	public UnexpectedTokenException(string message) : base(message){}
