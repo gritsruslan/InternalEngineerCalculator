@@ -1,3 +1,14 @@
-﻿// See https://aka.ms/new-console-template for more information
+﻿namespace InternalEngineerCalculator.Main;
 
-Console.WriteLine("Hello, World!");
+static class Program
+{
+	private static void Main()
+	{
+		var internalEngineerCalculator = new InternalEngineerCalculator();
+#if DEBUG
+		internalEngineerCalculator.StartDebug();
+#else
+		internalEngineerCalculator.Start();
+#endif
+	}
+}
