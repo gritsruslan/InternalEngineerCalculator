@@ -15,5 +15,6 @@ public enum TokenType
 	Identifier,
 
 	BinaryExpression,
-	UnaryOperation
+	UnaryOperation,
+	FunctionCall
 }
