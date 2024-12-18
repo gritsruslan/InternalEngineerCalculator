@@ -1,4 +1,4 @@
-namespace InternalEngineerCalculator.Main;
+namespace InternalEngineerCalculator.Main.Tokens;
 
 internal sealed class NumberToken(string valueString, int position, double value)
 	: Token(TokenType.Number, position, valueString)

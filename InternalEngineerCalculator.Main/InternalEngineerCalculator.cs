@@ -1,3 +1,6 @@
+using InternalEngineerCalculator.Main.Exceptions;
+using InternalEngineerCalculator.Main.Extensions;
+
 namespace InternalEngineerCalculator.Main;
 
 internal class InternalEngineerCalculator

@@ -1,3 +1,7 @@
+using InternalEngineerCalculator.Main.Exceptions;
+using InternalEngineerCalculator.Main.Expressions;
+using InternalEngineerCalculator.Main.Tokens;
+
 namespace InternalEngineerCalculator.Main;
 
 internal sealed class Evaluator

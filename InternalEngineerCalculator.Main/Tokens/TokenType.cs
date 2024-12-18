@@ -1,4 +1,4 @@
-namespace InternalEngineerCalculator.Main;
+namespace InternalEngineerCalculator.Main.Tokens;
 
 public enum TokenType
 {

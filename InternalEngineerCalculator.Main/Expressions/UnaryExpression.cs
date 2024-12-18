@@ -1,4 +1,6 @@
-namespace InternalEngineerCalculator.Main;
+using InternalEngineerCalculator.Main.Tokens;
+
+namespace InternalEngineerCalculator.Main.Expressions;
 
 internal sealed class UnaryExpression(NonValueToken unaryOperation, Expression expression) : Expression
 {

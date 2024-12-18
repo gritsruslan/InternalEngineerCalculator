@@ -1,4 +1,6 @@
-namespace InternalEngineerCalculator.Main;
+using InternalEngineerCalculator.Main.Tokens;
+
+namespace InternalEngineerCalculator.Main.Exceptions;
 
 internal sealed class UnexpectedTokenException : CalculatorException
 {

@@ -1,4 +1,6 @@
-namespace InternalEngineerCalculator.Main;
+using InternalEngineerCalculator.Main.Expressions;
+
+namespace InternalEngineerCalculator.Main.Extensions;
 
 internal static class ExpressionExtensions
 {
