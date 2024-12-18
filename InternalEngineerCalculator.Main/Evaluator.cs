@@ -6,6 +6,8 @@ namespace InternalEngineerCalculator.Main;
 
 internal sealed class Evaluator
 {
+	private readonly FunctionManager _functionManager; // TODO Receive from constructor
+
 	public double Evaluate(Expression expression)
 	{
 		if (expression is NumberExpression ne)
@@ -38,5 +40,23 @@ internal sealed class Evaluator
 		};
 
 		return result;
+	}
+
+	private double EvaluateFunction(FunctionCallExpression functionCallExpression)
+	{
+		var header = new FunctionCallHeader(functionCallExpression.Name, functionCallExpression.CountOfArgs);
+
+		var function = _functionManager.GetFunctionByHeader(header);
+
+		double[] evaluatedArgValues = new double[functionCallExpression.CountOfArgs];
+
+		for (int i = 0; i < functionCallExpression.Arguments.Length; i++)
+		{
+			var argExpression = functionCallExpression.Arguments[i];
+			double value = Evaluate(argExpression);
+			evaluatedArgValues[i] = value;
+		}
+
+		return function.Execute(evaluatedArgValues);
 	}
 }
