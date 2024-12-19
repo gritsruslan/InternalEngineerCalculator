@@ -24,7 +24,7 @@ internal sealed class Lexer(string code)
 			Next();
 	}
 
-	private readonly HashSet<char> _singleChars = ['+', '-', '*', '/', '(', ')', '^'];
+	private readonly HashSet<char> _singleChars = ['+', '-', '*', '/', '(', ')', '^', ','];
 
 	private readonly HashSet<char> _separatorChars = [' ', '\t', '\r', '\0'];
 
@@ -64,7 +64,8 @@ internal sealed class Lexer(string code)
 
 		var identifierToken = ProcessIdentifier();
 
-		throw new CalculatorException($"Unknown identifier \"{identifierToken.ValueString}\"!");
+		return identifierToken;
+		//throw new CalculatorException($"Unknown identifier \"{identifierToken.ValueString}\"!");
 	}
 
 	private Option<NumberToken> ProcessIfNumberToken()
@@ -110,6 +111,7 @@ internal sealed class Lexer(string code)
 			'(' => TokenType.OpenParenthesis,
 			')' => TokenType.CloseParenthesis,
 			'^' => TokenType.Pow,
+			',' => TokenType.Comma,
 			_ => throw new CalculatorException("Unknown single char operator!")
 		};
 
