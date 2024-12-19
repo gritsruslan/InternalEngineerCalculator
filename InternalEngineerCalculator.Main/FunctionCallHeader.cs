@@ -63,9 +63,7 @@ internal class FunctionManager
 	public Function GetFunctionByHeader(FunctionCallHeader header)
 	{
 		if(_functions.TryGetValue(header, out var function))
-		{
 			return function;
-		}
 
 		throw new FunctionNotFoundException(header.FunctionName, header.CountOfArg);
 	}

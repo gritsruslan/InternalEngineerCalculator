@@ -18,12 +18,13 @@ internal sealed class Parser
 		_tokens = tokens;
 	}
 
-	public Expression ParseExpression(int parentPrecedence = 0)
+	public Expression ParseExpression(int parentPrecedence = 0, bool isInFunction = false)
 	{
 		Expression left;
 		if (Current is null)
 			throw new EndOfInputException();
 
+		// if its unary expression (like -5 or -9)
 		var unaryOperatorPrecedence = GetUnaryOperatorPrecedence(Current);
 		if (unaryOperatorPrecedence != 0 && unaryOperatorPrecedence >= parentPrecedence)
 		{
@@ -32,9 +33,14 @@ internal sealed class Parser
 			var operand = ParseExpression(unaryOperatorPrecedence);
 			left = new UnaryExpression(operatorToken!, operand);
 		}
+		//if has no unary operator
 		else
 		{
-			left = ParseParenthesis();
+			if (Current.Type == TokenType.Identifier)
+				// Parse function if identifier (in future parse variables will be here)
+				left = ParseFunction();
+			else
+				left = ParseParenthesis();
 		}
 
 		while (true)
@@ -42,20 +48,53 @@ internal sealed class Parser
 			if(Current is null)
 				break;
 
+			// break if current token is function separator and its in function right now
+			if(isInFunction && Current.Type is TokenType.Comma or TokenType.CloseParenthesis)
+				break;
+
 			if (Current is not NonValueToken operatorToken)
 				throw new UnexpectedTokenException(Current.Type.ToString(), "math operator");
 
 			var precedence = GetOperationPrecedence(operatorToken);
 
+			// if current operator precedence less than parent precedence => break
 			if (precedence == 0 || precedence <= parentPrecedence)
 				break;
 
 			Next();
-			var right = ParseExpression(precedence);
+
+			// parse second operand
+			var right = ParseExpression(precedence, isInFunction);
 			left = new BinaryExpression(left, operatorToken, right);
 		}
 
 		return left;
+	}
+
+	private FunctionCallExpression ParseFunction()
+	{
+		var functionName = Current!.ValueString;
+
+		// skip function name token and open parenthesis token
+		Next();
+		Next();
+
+		List<Expression> expressions = new List<Expression>();
+
+		// while the function is finished parsing its arguments into expressions
+		while (Current.Type != TokenType.CloseParenthesis)
+		{
+			expressions.Add(ParseExpression(isInFunction: true));
+
+			if (Current.Type != TokenType.Comma || Current.Type != TokenType.CloseParenthesis)
+				throw new Exception("Not Comma!");
+
+			if(Current.Type == TokenType.Comma)
+				Next(); // skip comma
+		}
+
+		Next(); // skip close parenthesis
+		return new FunctionCallExpression(functionName, expressions.ToArray());
 	}
 
 	private static int GetUnaryOperatorPrecedence(Token token)
@@ -89,9 +128,11 @@ internal sealed class Parser
 			throw new EndOfInputException();
 
 		Expression expr;
+		// if current token is open parenthesis - parse in parenthesis expression first of all
 		if (Current.Type == TokenType.OpenParenthesis)
 		{
 			Next();
+			// parse in parenthesis expression
 			expr = ParseExpression();
 
 			if (Current == null)
@@ -101,13 +142,15 @@ internal sealed class Parser
 				throw new UnexpectedTokenException(Current.Type,TokenType.CloseParenthesis );
 
 			Next();
-			return expr;
+			return expr; // return in parenthesises expression as a single whole
 		}
 
+		// if its not open parenthesis token than its must be a number!
 		if (Current is not NumberToken numberToken)
 			throw new UnexpectedTokenException(Current.Type,TokenType.Number);
 
 		Next();
+
 		expr = new NumberExpression(numberToken);
 		return expr;
 	}
