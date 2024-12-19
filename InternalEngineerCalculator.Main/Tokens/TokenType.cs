@@ -13,6 +13,7 @@ public enum TokenType
 	CloseParenthesis,
 	EndOfLine,
 	Identifier,
+	Comma,
 
 	BinaryExpression,
 	UnaryOperation,
