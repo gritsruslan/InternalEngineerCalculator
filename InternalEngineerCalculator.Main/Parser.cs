@@ -77,7 +77,16 @@ internal sealed class Parser
 
 		// skip function name token and open parenthesis token
 		Next();
+
+		if (Current is null || Current.Type != TokenType.OpenParenthesis)
+			throw new CalculatorException("Expected open parenthesis token!");
+
 		Next();
+
+		if (Current is null)
+			throw new EndOfInputException();
+		if (Current.Type == TokenType.CloseParenthesis)
+			throw new CalculatorException("Function cannot have zero arguments!");
 
 		List<Expression> expressions = new List<Expression>();
 
@@ -86,8 +95,10 @@ internal sealed class Parser
 		{
 			expressions.Add(ParseExpression(isInFunction: true));
 
-			if (Current.Type != TokenType.Comma || Current.Type != TokenType.CloseParenthesis)
-				throw new Exception("Not Comma!");
+			if (Current is null)
+				throw new CalculatorException("Function must have close parenthesis!");
+			if (Current.Type != TokenType.Comma && Current.Type != TokenType.CloseParenthesis)
+				throw new CalculatorException("Not Comma!");
 
 			if(Current.Type == TokenType.Comma)
 				Next(); // skip comma

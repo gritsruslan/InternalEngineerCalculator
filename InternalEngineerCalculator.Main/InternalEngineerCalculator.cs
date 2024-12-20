@@ -28,11 +28,11 @@ internal class InternalEngineerCalculator
 			}
 
 			var tokens = new Lexer(input).Tokenize();
-			tokens.PrintTokens();
-
-			/*
+			//tokens.PrintTokens();
 			var parser = new Parser(tokens);
 			var expression = parser.ParseExpression();
+
+			//expression.PrettyPrint();
 			var evaluator = new Evaluator();
 			var result = evaluator.Evaluate(expression);
 
@@ -40,7 +40,6 @@ internal class InternalEngineerCalculator
 				expression.PrettyPrint();
 
 			Console.WriteLine($"Result : {result}");
-			*/
 		}
 	}
 #endif
