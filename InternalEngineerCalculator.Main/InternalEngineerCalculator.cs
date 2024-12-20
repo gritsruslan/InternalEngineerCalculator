@@ -27,8 +27,11 @@ internal class InternalEngineerCalculator
 				continue;
 			}
 
-			var lexemes = new Lexer(input).Tokenize();
-			var parser = new Parser(lexemes);
+			var tokens = new Lexer(input).Tokenize();
+			tokens.PrintTokens();
+
+			/*
+			var parser = new Parser(tokens);
 			var expression = parser.ParseExpression();
 			var evaluator = new Evaluator();
 			var result = evaluator.Evaluate(expression);
@@ -37,6 +40,7 @@ internal class InternalEngineerCalculator
 				expression.PrettyPrint();
 
 			Console.WriteLine($"Result : {result}");
+			*/
 		}
 	}
 #endif
