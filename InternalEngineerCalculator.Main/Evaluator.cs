@@ -6,7 +6,12 @@ namespace InternalEngineerCalculator.Main;
 
 internal sealed class Evaluator
 {
-	private readonly FunctionManager _functionManager; // TODO Receive from constructor
+	private readonly FunctionManager _functionManager;
+
+	public Evaluator(FunctionManager functionManager)
+	{
+		_functionManager = functionManager;
+	}
 
 	public double Evaluate(Expression expression)
 	{
@@ -22,6 +27,9 @@ internal sealed class Evaluator
 			// Other unary operators
 			return expr;
 		}
+
+		if (expression is FunctionCallExpression fce)
+			return EvaluateFunction(fce);
 
 		var binExpression = expression as BinaryExpression;
 
