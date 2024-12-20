@@ -115,9 +115,12 @@ internal sealed class Lexer(string code)
 			_ => throw new CalculatorException("Unknown single char operator!")
 		};
 
+		var position = _position;
+		var valueString = Current.ToString();
+
 		Next();
 
-		return new NonValueToken(singleCharTokenType, _position, Current.ToString());
+		return new NonValueToken(singleCharTokenType, position, valueString);
 	}
 
 	private NonValueToken ProcessIdentifier()
