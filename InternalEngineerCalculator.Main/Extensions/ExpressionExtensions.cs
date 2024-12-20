@@ -32,7 +32,7 @@ internal static class ExpressionExtensions
 			for (int i = 0; i < functionExpression.Arguments.Length; i++)
 			{
 				Console.WriteLine(offset + $"Argument {i}");
-				functionExpression.Arguments[i].PrettyPrint();
+				functionExpression.Arguments[i].PrettyPrint(offset);
 			}
 		}
 	}
