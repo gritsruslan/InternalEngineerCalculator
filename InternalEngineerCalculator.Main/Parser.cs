@@ -102,6 +102,9 @@ internal sealed class Parser
 
 			if(Current.Type == TokenType.Comma)
 				Next(); // skip comma
+
+			if (Current is null)
+				throw new EndOfInputException();
 		}
 
 		Next(); // skip close parenthesis

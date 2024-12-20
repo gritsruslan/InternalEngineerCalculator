@@ -9,6 +9,14 @@ internal class InternalEngineerCalculator
 
 	private bool _showExpressionTree;
 
+	private FunctionManager _functionManager;
+
+	public InternalEngineerCalculator()
+	{
+		_functionManager = new FunctionManager();
+		_functionManager.InitializeDefaultFunctions();
+	}
+
 #if DEBUG
 	public void StartDebug()
 	{
@@ -33,7 +41,7 @@ internal class InternalEngineerCalculator
 			var expression = parser.ParseExpression();
 
 			//expression.PrettyPrint();
-			var evaluator = new Evaluator();
+			var evaluator = new Evaluator(_functionManager);
 			var result = evaluator.Evaluate(expression);
 
 			if(_showExpressionTree)
@@ -66,7 +74,7 @@ internal class InternalEngineerCalculator
 				var lexemes = new Lexer(input).Tokenize();
 				var parser = new Parser(lexemes);
 				var expression = parser.ParseExpression();
-				var evaluator = new Evaluator();
+				var evaluator = new Evaluator(_functionManager);
 				var result = evaluator.Evaluate(expression);
 
 				if(_showExpressionTree)
