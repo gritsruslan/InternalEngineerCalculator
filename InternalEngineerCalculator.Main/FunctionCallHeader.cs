@@ -47,6 +47,10 @@ internal class FunctionManager
 		CreateNewBaseFunction("ceil", 1, args => Math.Ceiling(args[0]));
 		//Round
 		CreateNewBaseFunction("round", 1, args => Math.Round(args[0]));
+		//Rad
+		CreateNewBaseFunction("rad", 1, args => args[0] * 180 / Math.PI);
+		//Deg
+		CreateNewBaseFunction("deg", 1, args => args[0] * Math.PI / 180);
 		//Fact TODO
 		//Log10
 		CreateNewBaseFunction("log10", 1, args => Math.Log10(args[0]));
