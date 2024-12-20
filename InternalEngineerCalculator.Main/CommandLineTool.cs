@@ -97,7 +97,7 @@ internal class CommandLineTool
 	{
 		if (args.Length != 1)
 		{
-			PrintIfIncorrectCountOfArguments("exit", 1, args.Length);
+			PrintIfIncorrectCountOfArguments("ShowTokens", 1, args.Length);
 			return;
 		}
 
@@ -108,14 +108,18 @@ internal class CommandLineTool
 		else if (arg == "false")
 			_environmentVariables["ShowTokens"] = false;
 		else
+		{
+			Console.ForegroundColor = ConsoleColor.Yellow;
 			Console.WriteLine($"Incorrect argument {arg}, expected true or false");
+			Console.ForegroundColor = ConsoleColor.Gray;
+		}
 	}
 
 	private void ShowExpressionTreeCommand(string[] args)
 	{
 		if (args.Length != 1)
 		{
-			PrintIfIncorrectCountOfArguments("exit", 1, args.Length);
+			PrintIfIncorrectCountOfArguments("ShowExpressionTree", 1, args.Length);
 			return;
 		}
 
@@ -126,7 +130,11 @@ internal class CommandLineTool
 		else if (arg == "false")
 			_environmentVariables["ShowExpressionTree"] = false;
 		else
+		{
+			Console.ForegroundColor = ConsoleColor.Yellow;
 			Console.WriteLine($"Incorrect argument {arg}, expected true or false");
+			Console.ForegroundColor = ConsoleColor.Gray;
+		}
 	}
 
 	private void ShowBasicFunctions(string[] args)
@@ -166,10 +174,12 @@ internal class CommandLineTool
 
 	private void PrintIfIncorrectCountOfArguments(string command,int mustHaveArgs, int countOfArgs)
 	{
+		Console.ForegroundColor = ConsoleColor.Yellow;
 		var argsString = mustHaveArgs == 1 ? "arguments" : "argument";
 		var transmised = countOfArgs == 1 ? "was" : "were";
 		Console.WriteLine(
 			$"{command} command must have {mustHaveArgs} {argsString}, but {countOfArgs} {transmised} transmised");
+		Console.ForegroundColor = ConsoleColor.Gray;
 	}
 
 }
