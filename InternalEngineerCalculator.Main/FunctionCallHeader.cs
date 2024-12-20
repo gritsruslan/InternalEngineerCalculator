@@ -40,7 +40,8 @@ internal class FunctionManager
 		CreateNewBaseFunction("ctg", 1, args => 1/Math.Tan(args[0]));
 		//Sqrt2
 		CreateNewBaseFunction("sqrt", 1, args => Math.Sqrt(args[0]));
-		//SqrtN TODO
+		//SqrtN
+		CreateNewBaseFunction("sqrt", 2, args => Math.Exp(Math.Log(args[0], Math.E) / args[1]) );
 		//Floor
 		CreateNewBaseFunction("floor", 1, args => Math.Floor(args[0]));
 		//Ceil
@@ -51,7 +52,19 @@ internal class FunctionManager
 		CreateNewBaseFunction("rad", 1, args => args[0] * 180 / Math.PI);
 		//Deg
 		CreateNewBaseFunction("deg", 1, args => args[0] * Math.PI / 180);
-		//Fact TODO
+		//Fact
+		CreateNewBaseFunction("fact", 1, args =>
+		{
+			var n = args[0];
+			if (n < 0)
+				throw new CalculatorException("The factorial of negative number is not defined!");
+
+			double result = 1;
+			for (int i = 2; i <= n; i++)
+				result *= i;
+			return result;
+		});
+
 		//Log10
 		CreateNewBaseFunction("log10", 1, args => Math.Log10(args[0]));
 		//Log
