@@ -99,8 +99,8 @@ internal class InternalEngineerCalculator
 			}
 			catch (CalculatorException exception)
 			{
-				Console.ForegroundColor = ConsoleColor.DarkMagenta;
-				Console.WriteLine(exception.Message);
+				Console.ForegroundColor = ConsoleColor.Yellow;
+				Console.WriteLine("Input error" + exception.Message);
 				Console.WriteLine();
 				Console.ForegroundColor = DefaultColor;
 			}

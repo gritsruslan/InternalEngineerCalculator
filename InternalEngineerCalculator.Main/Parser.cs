@@ -22,7 +22,7 @@ internal sealed class Parser
 	{
 		Expression left;
 		if (Current is null)
-			throw new EndOfInputException();
+			throw new UnexpectedTokenException();
 
 		// if its unary expression (like -5 or -9)
 		var unaryOperatorPrecedence = GetUnaryOperatorPrecedence(Current);
@@ -79,7 +79,7 @@ internal sealed class Parser
 		Next();
 
 		if (Current is null || Current.Type != TokenType.OpenParenthesis)
-			throw new CalculatorException("Expected open parenthesis token!");
+			throw new CalculatorException("Expected open parenthesis token in start of a function call!");
 
 		Next();
 
@@ -96,9 +96,10 @@ internal sealed class Parser
 			expressions.Add(ParseExpression(isInFunction: true));
 
 			if (Current is null)
-				throw new CalculatorException("Function must have close parenthesis!");
+				throw new CalculatorException("Function call must have close parenthesis!");
+
 			if (Current.Type != TokenType.Comma && Current.Type != TokenType.CloseParenthesis)
-				throw new CalculatorException("Not Comma!");
+				throw new CalculatorException("Expected close parenthesis or comma in function call!");
 
 			if(Current.Type == TokenType.Comma)
 				Next(); // skip comma
@@ -161,7 +162,7 @@ internal sealed class Parser
 
 		// if its not open parenthesis token than its must be a number!
 		if (Current is not NumberToken numberToken)
-			throw new UnexpectedTokenException(Current.Type,TokenType.Number);
+			throw new UnexpectedTokenException();
 
 		Next();
 
