@@ -1,4 +1,6 @@
-namespace InternalEngineerCalculator.Main;
+using InternalEngineerCalculator.Main.Tokens;
+
+namespace InternalEngineerCalculator.Main.Exceptions;
 
 internal sealed class UnexpectedTokenException : CalculatorException
 {
@@ -9,4 +11,6 @@ internal sealed class UnexpectedTokenException : CalculatorException
 
 	public UnexpectedTokenException(TokenType received, TokenType expected) : base(
 		$"Unexpected operator {received}, expected : {expected}") {}
+
+	public UnexpectedTokenException() : base("Expected number, function call or open parenthesis or function call!") {}
 }

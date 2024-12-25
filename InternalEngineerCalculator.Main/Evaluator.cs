@@ -1,7 +1,19 @@
+using InternalEngineerCalculator.Main.Exceptions;
+using InternalEngineerCalculator.Main.Expressions;
+using InternalEngineerCalculator.Main.Functions;
+using InternalEngineerCalculator.Main.Tokens;
+
 namespace InternalEngineerCalculator.Main;
 
 internal sealed class Evaluator
 {
+	private readonly FunctionManager _functionManager;
+
+	public Evaluator(FunctionManager functionManager)
+	{
+		_functionManager = functionManager;
+	}
+
 	public double Evaluate(Expression expression)
 	{
 		if (expression is NumberExpression ne)
@@ -16,6 +28,9 @@ internal sealed class Evaluator
 			// Other unary operators
 			return expr;
 		}
+
+		if (expression is FunctionCallExpression fce)
+			return EvaluateFunction(fce);
 
 		var binExpression = expression as BinaryExpression;
 
@@ -34,5 +49,23 @@ internal sealed class Evaluator
 		};
 
 		return result;
+	}
+
+	private double EvaluateFunction(FunctionCallExpression functionCallExpression)
+	{
+		var header = new FunctionCallHeader(functionCallExpression.Name, functionCallExpression.CountOfArgs);
+
+		var function = _functionManager.GetFunctionByHeader(header);
+
+		double[] evaluatedArgValues = new double[functionCallExpression.CountOfArgs];
+
+		for (int i = 0; i < functionCallExpression.Arguments.Length; i++)
+		{
+			var argExpression = functionCallExpression.Arguments[i];
+			double value = Evaluate(argExpression);
+			evaluatedArgValues[i] = value;
+		}
+
+		return function.Execute(evaluatedArgValues);
 	}
 }

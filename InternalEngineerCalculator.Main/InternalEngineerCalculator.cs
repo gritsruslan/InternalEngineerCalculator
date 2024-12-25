@@ -1,10 +1,30 @@
+using InternalEngineerCalculator.Main.Exceptions;
+using InternalEngineerCalculator.Main.Extensions;
+using InternalEngineerCalculator.Main.Functions;
+
 namespace InternalEngineerCalculator.Main;
 
 internal class InternalEngineerCalculator
 {
 	public readonly ConsoleColor DefaultColor = ConsoleColor.Gray;
 
-	private bool _showExpressionTree;
+	private FunctionManager _functionManager;
+
+	private CommandLineTool _commandLineTool;
+
+	private Dictionary<string, bool> _environmentVariables = new()
+	{
+		{ "ShowTokens", false },
+		{ "ShowExpressionTree", false },
+	};
+
+	public InternalEngineerCalculator()
+	{
+		_functionManager = new FunctionManager();
+		_functionManager.InitializeDefaultFunctions();
+
+		_commandLineTool = new(_functionManager, _environmentVariables);
+	}
 
 #if DEBUG
 	public void StartDebug()
@@ -20,18 +40,23 @@ internal class InternalEngineerCalculator
 
 			if (input[0] == '#')
 			{
-				ProcessCommandLine(input);
+				_commandLineTool.ProcessCommand(input);
 				continue;
 			}
 
-			var lexemes = new Lexer(input).Tokenize();
-			var parser = new Parser(lexemes);
-			var expression = parser.ParseExpression();
-			var evaluator = new Evaluator();
-			var result = evaluator.Evaluate(expression);
+			var tokens = new Lexer(input).Tokenize();
 
-			if(_showExpressionTree)
+			if(_environmentVariables["ShowTokens"])
+				tokens.PrintTokens();
+
+			var parser = new Parser(tokens);
+			var expression = parser.ParseExpression();
+
+			if(_environmentVariables["ShowExpressionTree"])
 				expression.PrettyPrint();
+
+			var evaluator = new Evaluator(_functionManager);
+			var result = evaluator.Evaluate(expression);
 
 			Console.WriteLine($"Result : {result}");
 		}
@@ -53,25 +78,30 @@ internal class InternalEngineerCalculator
 
 				if (input[0] == '#')
 				{
-					ProcessCommandLine(input);
+					_commandLineTool.ProcessCommand(input);
 					continue;
 				}
 
-				var lexemes = new Lexer(input).Tokenize();
-				var parser = new Parser(lexemes);
-				var expression = parser.ParseExpression();
-				var evaluator = new Evaluator();
-				var result = evaluator.Evaluate(expression);
+				var tokens = new Lexer(input).Tokenize();
 
-				if(_showExpressionTree)
+				if(_environmentVariables["ShowTokens"])
+					tokens.PrintTokens();
+
+				var parser = new Parser(tokens);
+				var expression = parser.ParseExpression();
+
+				if(_environmentVariables["ShowExpressionTree"])
 					expression.PrettyPrint();
+
+				var evaluator = new Evaluator(_functionManager);
+				var result = evaluator.Evaluate(expression);
 
 				Console.WriteLine($"Result : {result}");
 			}
 			catch (CalculatorException exception)
 			{
-				Console.ForegroundColor = ConsoleColor.DarkMagenta;
-				Console.WriteLine(exception.Message);
+				Console.ForegroundColor = ConsoleColor.Yellow;
+				Console.WriteLine("Input error" + exception.Message);
 				Console.WriteLine();
 				Console.ForegroundColor = DefaultColor;
 			}
@@ -82,55 +112,6 @@ internal class InternalEngineerCalculator
 				Console.WriteLine();
 				Console.ForegroundColor = DefaultColor;
 			}
-		}
-	}
-
-	private void ProcessCommandLine(string commandLine)
-	{
-		var commandLineNames =
-			commandLine.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(str => str.ToLower()).ToArray();
-		var command = commandLineNames[0];
-
-		if(command == "#exit")
-			Environment.Exit(0);
-		else if(command == "#clear")
-			Console.Clear();
-		else if (command == "#help")
-		{
-			string helpString =
-				"""
-
-				InternalEngineerCalculator by @gritsruslan!
-
-				Available math operators : + - * / ^
-				Examples:
-				12 + 3 * (2 - 1)
-				2 ^ 3 + 52
-				1/20 + 1
-
-				Available commands :
-				#exit - exit calculator
-				#clear - clear console output
-				#help - output short calculator guide
-				#showexpressiontree - enable showing expression trees
-				#unshowexpressiontree - disable showing expression trees
-
-				""";
-			Console.WriteLine(helpString);
-		}
-		else if (command == "#showexpressiontree")
-		{
-			Console.WriteLine("Display expression tree is enabled!");
-			_showExpressionTree = true;
-		}
-		else if (command == "#unshowexpressiontree")
-		{
-			Console.WriteLine("Display expression tree is disabled!");
-			_showExpressionTree = false;
-		}
-		else
-		{
-			Console.WriteLine($"Unknown command : {command}");
 		}
 	}
 }

@@ -1,6 +1,8 @@
 using System.Globalization;
 using System.Text;
 using InternalEngineerCalculator.Main.Common;
+using InternalEngineerCalculator.Main.Exceptions;
+using InternalEngineerCalculator.Main.Tokens;
 
 namespace InternalEngineerCalculator.Main;
 
@@ -22,7 +24,7 @@ internal sealed class Lexer(string code)
 			Next();
 	}
 
-	private readonly HashSet<char> _singleChars = ['+', '-', '*', '/', '(', ')', '^'];
+	private readonly HashSet<char> _singleChars = ['+', '-', '*', '/', '(', ')', '^', ','];
 
 	private readonly HashSet<char> _separatorChars = [' ', '\t', '\r', '\0'];
 
@@ -62,7 +64,8 @@ internal sealed class Lexer(string code)
 
 		var identifierToken = ProcessIdentifier();
 
-		throw new CalculatorException($"Unknown identifier \"{identifierToken.ValueString}\"!");
+		return identifierToken;
+		//throw new CalculatorException($"Unknown identifier \"{identifierToken.ValueString}\"!");
 	}
 
 	private Option<NumberToken> ProcessIfNumberToken()
@@ -108,12 +111,16 @@ internal sealed class Lexer(string code)
 			'(' => TokenType.OpenParenthesis,
 			')' => TokenType.CloseParenthesis,
 			'^' => TokenType.Pow,
+			',' => TokenType.Comma,
 			_ => throw new CalculatorException("Unknown single char operator!")
 		};
 
+		var position = _position;
+		var valueString = Current.ToString();
+
 		Next();
 
-		return new NonValueToken(singleCharTokenType, _position, Current.ToString());
+		return new NonValueToken(singleCharTokenType, position, valueString);
 	}
 
 	private NonValueToken ProcessIdentifier()

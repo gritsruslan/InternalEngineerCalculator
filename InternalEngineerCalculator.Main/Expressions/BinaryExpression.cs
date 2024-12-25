@@ -1,4 +1,6 @@
-namespace InternalEngineerCalculator.Main;
+using InternalEngineerCalculator.Main.Tokens;
+
+namespace InternalEngineerCalculator.Main.Expressions;
 
 internal sealed class BinaryExpression(Expression left, NonValueToken operation, Expression right) : Expression
 {

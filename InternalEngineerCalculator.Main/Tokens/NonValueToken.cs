@@ -1,4 +1,4 @@
-namespace InternalEngineerCalculator.Main;
+namespace InternalEngineerCalculator.Main.Tokens;
 
 internal sealed class NonValueToken (TokenType type, int position, string valueString)
 	: Token(type, position, valueString)

@@ -1,4 +1,6 @@
-namespace InternalEngineerCalculator.Main;
+using InternalEngineerCalculator.Main.Expressions;
+
+namespace InternalEngineerCalculator.Main.Extensions;
 
 internal static class ExpressionExtensions
 {
@@ -21,6 +23,17 @@ internal static class ExpressionExtensions
 			binaryExpression.Left.PrettyPrint(offset);
 			Console.WriteLine(offset + $"Operation {binaryExpression.Operation.ValueString}");
 			binaryExpression.Right.PrettyPrint(offset);
+		}
+
+		if (expression is FunctionCallExpression functionExpression)
+		{
+			Console.WriteLine(offset + $"Function {functionExpression.Name}");
+			offset += "  ";
+			for (int i = 0; i < functionExpression.Arguments.Length; i++)
+			{
+				Console.WriteLine(offset + $"Argument {i}");
+				functionExpression.Arguments[i].PrettyPrint(offset);
+			}
 		}
 	}
 }

@@ -1,4 +1,4 @@
-namespace InternalEngineerCalculator.Main;
+namespace InternalEngineerCalculator.Main.Tokens;
 
 public enum TokenType
 {
@@ -13,7 +13,9 @@ public enum TokenType
 	CloseParenthesis,
 	EndOfLine,
 	Identifier,
+	Comma,
 
 	BinaryExpression,
-	UnaryOperation
+	UnaryOperation,
+	FunctionCall
 }
