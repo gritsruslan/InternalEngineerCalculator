@@ -1,3 +1,5 @@
+using InternalEngineerCalculator.Main.Functions;
+
 namespace InternalEngineerCalculator.Main;
 
 internal class CommandLineTool

@@ -1,27 +1,10 @@
 using InternalEngineerCalculator.Main.Exceptions;
-using InternalEngineerCalculator.Main.Expressions;
-using InternalEngineerCalculator.Main.Tokens;
 
-namespace InternalEngineerCalculator.Main;
-
-public record struct FunctionCallHeader(string FunctionName, int CountOfArg);
-
-internal record FunctionArgument(string Name);
-
-internal abstract class Function(string name)
-{
-	public readonly string Name = name;
-
-	public abstract bool IsBaseFunction { get; }
-
-	public abstract int CountOfArgs { get; }
-
-	public abstract double Execute(double[] args);
-}
+namespace InternalEngineerCalculator.Main.Functions;
 
 internal class FunctionManager
 {
-	private Dictionary<FunctionCallHeader, Function> _functions;
+	private readonly Dictionary<FunctionCallHeader, Function> _functions;
 
 	public FunctionManager()
 	{
@@ -99,29 +82,3 @@ internal class FunctionManager
 			new BaseFunction(name, countOfArgs, function));
 	}
 }
-
-internal sealed class BaseFunction(string name, int countOfArgs, Func<double[], double> function) :
-	Function(name)
-{
-	private readonly Func<double[], double> _function = function;
-
-	public override int CountOfArgs => countOfArgs;
-
-	public override bool IsBaseFunction => true;
-
-	public override double Execute(double[] args) => _function.Invoke(args);
-}
-
-internal sealed class FunctionCallExpression(string name, Expression[] arguments) : Expression
-{
-	public readonly string Name = name;
-
-	public readonly Expression[] Arguments = arguments;
-
-	public override TokenType Type => TokenType.FunctionCall;
-
-	public int CountOfArgs => Arguments.Length;
-}
-
-// Future version!
-internal sealed class CustomFunction(string name, FunctionArgument[] arguments, Expression functionExpression);

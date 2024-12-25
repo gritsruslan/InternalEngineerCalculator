@@ -1,5 +1,6 @@
 using InternalEngineerCalculator.Main.Exceptions;
 using InternalEngineerCalculator.Main.Expressions;
+using InternalEngineerCalculator.Main.Functions;
 using InternalEngineerCalculator.Main.Tokens;
 
 namespace InternalEngineerCalculator.Main;
