@@ -2,6 +2,7 @@ using InternalEngineerCalculator.Main.Exceptions;
 using InternalEngineerCalculator.Main.Expressions;
 using InternalEngineerCalculator.Main.Functions;
 using InternalEngineerCalculator.Main.Tokens;
+using InternalEngineerCalculator.Main.Variables;
 
 namespace InternalEngineerCalculator.Main;
 
@@ -9,15 +10,21 @@ internal sealed class Evaluator
 {
 	private readonly FunctionManager _functionManager;
 
-	public Evaluator(FunctionManager functionManager)
+	private readonly VariableManager _variableManager;
+
+	public Evaluator(FunctionManager functionManager, VariableManager variableManager)
 	{
 		_functionManager = functionManager;
+		_variableManager = variableManager;
 	}
 
 	public double Evaluate(Expression expression)
 	{
 		if (expression is NumberExpression ne)
 			return ne.Token.Value;
+
+		if (expression is VariableExpression ve)
+			return _variableManager.GetVariableValue(ve.Name);
 
 		if (expression is UnaryExpression ue)
 		{
