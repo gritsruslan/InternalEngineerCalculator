@@ -12,11 +12,15 @@ internal sealed class Parser
 
 	private Token? Current => _position < _tokens.Count ? _tokens[_position] : null;
 
+	private Token? NextToken => _position + 1 < _tokens.Count ? _tokens[_position + 1] : null;
+
 	private void Next() => _position++;
 	public Parser(List<Token> tokens)
 	{
 		_tokens = tokens;
 	}
+
+	public static bool IsAssignmentExpression(List<Token> tokens) => tokens.Any(t => t.Type == TokenType.EqualSign);
 
 	public Expression ParseExpression(int parentPrecedence = 0, bool isInFunction = false)
 	{
@@ -37,10 +41,16 @@ internal sealed class Parser
 		else
 		{
 			if (Current.Type == TokenType.Identifier)
-				// Parse function if identifier (in future parse variables will be here)
-				left = ParseFunction();
+			{
+				if (NextToken?.Type == TokenType.OpenParenthesis)
+					left = ParseFunction();
+				else
+					left = ParseVariable();
+			}
 			else
+			{
 				left = ParseParenthesis();
+			}
 		}
 
 		while (true)
@@ -69,6 +79,33 @@ internal sealed class Parser
 		}
 
 		return left;
+	}
+
+	public VariableAssignmentExpression ParseAssignmentExpression()
+	{
+		if (Current!.Type != TokenType.Identifier)
+			throw new CalculatorException("Incorrect variable assignment expression!");
+
+		var variableIdentifierToken = Current;
+
+		Next();
+
+		if (Current is null || Current.Type != TokenType.EqualSign)
+			throw new CalculatorException(
+				"Expected equal sign token after variable name in variable assignment expression!");
+
+		Next();
+
+		var variableExpression = ParseExpression();
+
+		return new VariableAssignmentExpression(variableIdentifierToken, variableExpression);
+	}
+
+	private VariableExpression ParseVariable()
+	{
+		var identifierToken = Current;
+		Next();
+		return new VariableExpression(identifierToken!);
 	}
 
 	private FunctionCallExpression ParseFunction()
