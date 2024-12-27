@@ -20,8 +20,6 @@ internal sealed class Parser
 		_tokens = tokens;
 	}
 
-	public static bool IsAssignmentExpression(List<Token> tokens) => tokens.Any(t => t.Type == TokenType.EqualSign);
-
 	public Expression ParseExpression(int parentPrecedence = 0, bool isInFunction = false)
 	{
 		Expression left;
@@ -81,7 +79,37 @@ internal sealed class Parser
 		return left;
 	}
 
-	public VariableAssignmentExpression ParseAssignmentExpression()
+	public AssignmentExpression ParseAssignmentExpression()
+	{
+		AssignmentExpression expression;
+
+		if (IsVariableAssignmentExpression())
+			expression = ParseVariableAssignmentExpression();
+
+		else if (IsFunctionAssignmentExpression())
+			expression = ParseFunctionAssignmentExpression();
+
+		else
+			throw new CalculatorException("Incorrect assignment expression!");
+
+		return expression;
+	}
+
+	public static bool IsAssignmentExpression(List<Token> tokens) => tokens.Any(t => t.Type == TokenType.EqualSign);
+
+	private bool IsVariableAssignmentExpression()
+	{
+		return Current is not null && Current.Type == TokenType.Identifier
+		                           && NextToken is not null && NextToken.Type != TokenType.OpenParenthesis;
+	}
+
+	private bool IsFunctionAssignmentExpression()
+	{
+		return Current is not null && Current.Type == TokenType.Identifier
+		                           && NextToken is not null && NextToken.Type == TokenType.OpenParenthesis;
+	}
+
+	public VariableAssignmentExpression ParseVariableAssignmentExpression()
 	{
 		if (Current!.Type != TokenType.Identifier)
 			throw new CalculatorException("Incorrect variable assignment expression!");
@@ -99,6 +127,51 @@ internal sealed class Parser
 		var variableExpression = ParseExpression();
 
 		return new VariableAssignmentExpression(variableIdentifierToken, variableExpression);
+	}
+
+	public FunctionAssignmentExpression ParseFunctionAssignmentExpression()
+	{
+		var functionName = Current!.ValueString;
+
+		var args = new List<string>();
+
+		Next();
+
+		if (Current.Type != TokenType.OpenParenthesis)
+			throw new CalculatorException(
+				"Expected open parenthesis in start of a function declaration after func name");
+
+		Next();
+
+		while (Current.Type != TokenType.CloseParenthesis)
+		{
+			args.Add(Current.ValueString);
+
+			Next();
+
+			if (Current is null)
+				throw new CalculatorException("Function declaration must have close parenthesis!");
+
+			if(Current.Type != TokenType.Comma && Current.Type != TokenType.CloseParenthesis)
+				throw new CalculatorException("Expected close parenthesis or comma in function declaration!");
+
+			if(Current.Type == TokenType.Comma)
+				Next();
+
+			if (Current is null)
+				throw new CalculatorException("Expected close parenthesis in function declaration!");
+		}
+
+		Next();
+
+		if (Current.Type != TokenType.EqualSign)
+			throw new CalculatorException("Expected equal sign after header in function declaration");
+
+		Next();
+
+		var functionExpression = ParseExpression();
+
+		return new FunctionAssignmentExpression(functionName, args, functionExpression);
 	}
 
 	private VariableExpression ParseVariable()
