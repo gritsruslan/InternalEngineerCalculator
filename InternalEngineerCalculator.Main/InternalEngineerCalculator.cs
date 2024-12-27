@@ -1,4 +1,5 @@
 using InternalEngineerCalculator.Main.Exceptions;
+using InternalEngineerCalculator.Main.Expressions;
 using InternalEngineerCalculator.Main.Extensions;
 using InternalEngineerCalculator.Main.Functions;
 using InternalEngineerCalculator.Main.Variables;
@@ -35,7 +36,7 @@ internal class InternalEngineerCalculator
 
 		_evaluator = new Evaluator(_functionManager, _variableManager);
 
-		_assignmentExpressionHandler = new AssignmentExpressionHandler(_evaluator, _variableManager);
+		_assignmentExpressionHandler = new AssignmentExpressionHandler(_evaluator, _variableManager, _functionManager);
 
 		_commandLineTool = new(_functionManager, _variableManager, _environmentVariables);
 	}
@@ -69,16 +70,25 @@ internal class InternalEngineerCalculator
 			{
 				var parser = new Parser(tokens);
 
-				var variableAssignmentExpression = parser.ParseAssignmentExpression();
+				var assignmentExpression = parser.ParseAssignmentExpression();
 
 				if(_environmentVariables["ShowExpressionTree"])
-					variableAssignmentExpression.PrettyPrint();
+					assignmentExpression.PrettyPrint();
 
-				var newVarValue = _assignmentExpressionHandler
-					.HandleVariableAssignmentExpression(variableAssignmentExpression);
+				if (assignmentExpression is VariableAssignmentExpression ve)
+				{
+					var newVarValue = _assignmentExpressionHandler
+						.HandleVariableAssignmentExpression(ve);
 
-				Console.WriteLine(
-					$"Variable \"{variableAssignmentExpression.VariableName}\" received a new value {newVarValue} !");
+					Console.WriteLine(
+						$"Variable \"{assignmentExpression.Name}\" received a new value {newVarValue} !");
+				}
+				else if (assignmentExpression is FunctionAssignmentExpression fe)
+				{
+					_assignmentExpressionHandler.HandleFunctionAssignmentExpression(fe);
+
+					Console.WriteLine($"Function \"{fe.Name}\" with {fe.Args.Count} needed arguments was successfully declared!");
+				}
 			}
 			else
 			{
