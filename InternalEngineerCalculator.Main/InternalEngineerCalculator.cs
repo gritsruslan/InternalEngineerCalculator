@@ -133,16 +133,43 @@ internal class InternalEngineerCalculator
 				if(_environmentVariables["ShowTokens"])
 					tokens.PrintTokens();
 
-				var parser = new Parser(tokens);
-				var expression = parser.ParseExpression();
+				if (Parser.IsAssignmentExpression(tokens))
+				{
+					var parser = new Parser(tokens);
 
-				if(_environmentVariables["ShowExpressionTree"])
-					expression.PrettyPrint();
+					var assignmentExpression = parser.ParseAssignmentExpression();
 
-				var evaluator = new Evaluator(_functionManager, _variableManager);
-				var result = evaluator.Evaluate(expression);
+					if(_environmentVariables["ShowExpressionTree"])
+						assignmentExpression.PrettyPrint();
 
-				Console.WriteLine($"Result : {result}");
+					if (assignmentExpression is VariableAssignmentExpression ve)
+					{
+						var newVarValue = _assignmentExpressionHandler
+							.HandleVariableAssignmentExpression(ve);
+
+						Console.WriteLine(
+							$"Variable \"{assignmentExpression.Name}\" received a new value {newVarValue} !");
+					}
+					else if (assignmentExpression is FunctionAssignmentExpression fe)
+					{
+						_assignmentExpressionHandler.HandleFunctionAssignmentExpression(fe);
+
+						Console.WriteLine($"Function \"{fe.Name}\" with {fe.Args.Count} needed arguments was successfully declared!");
+					}
+				}
+				else
+				{
+					var parser = new Parser(tokens);
+					var expression = parser.ParseExpression();
+
+					if(_environmentVariables["ShowExpressionTree"])
+						expression.PrettyPrint();
+
+					var evaluator = new Evaluator(_functionManager, _variableManager);
+					var result = evaluator.Evaluate(expression);
+
+					Console.WriteLine($"Result : {result}");
+				}
 			}
 			catch (CalculatorException exception)
 			{
