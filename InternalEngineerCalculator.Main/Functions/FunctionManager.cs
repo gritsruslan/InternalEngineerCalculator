@@ -1,4 +1,5 @@
 using InternalEngineerCalculator.Main.Exceptions;
+using InternalEngineerCalculator.Main.Expressions;
 
 namespace InternalEngineerCalculator.Main.Functions;
 
@@ -66,6 +67,24 @@ internal class FunctionManager
 			return function;
 
 		throw new FunctionNotFoundException(header.FunctionName, header.CountOfArg);
+	}
+
+	public bool HasFunction(FunctionCallHeader header) => _functions.ContainsKey(header);
+
+	public void CreateNewCustomFunction(string name, IReadOnlyList<string> args, Expression functionExpression)
+	{
+		var header = new FunctionCallHeader(name, args.Count);
+
+		if (HasFunction(header))
+			throw new CalculatorException(
+				$"There are a function with name \"{name}\" and {args.Count} arguments. " +
+				$"If you want to override it, first of all delete old function!");
+
+		var convArgs = args.Select(arg => new FunctionArgument(arg));
+
+		var function = new CustomFunction(name, convArgs.ToList(), functionExpression);
+
+		_functions.Add(header, function);
 	}
 
 	public void DeleteFunction(string name, int countOfArgs)
