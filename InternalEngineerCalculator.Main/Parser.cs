@@ -143,7 +143,10 @@ internal sealed class Parser
 
 		Next();
 
-		while (Current.Type != TokenType.CloseParenthesis)
+		if (Current is not null && Current.Type == TokenType.CloseParenthesis)
+			throw new CalculatorException("Function must take at least 1 argument!");
+
+		while (Current is not null && Current.Type != TokenType.CloseParenthesis)
 		{
 			args.Add(Current.ValueString);
 
@@ -164,10 +167,13 @@ internal sealed class Parser
 
 		Next();
 
-		if (Current.Type != TokenType.EqualSign)
+		if (Current is not null && Current.Type != TokenType.EqualSign)
 			throw new CalculatorException("Expected equal sign after header in function declaration");
 
 		Next();
+
+		if (Current is null)
+			throw new CalculatorException("Function cant be empty!");
 
 		var functionExpression = ParseExpression();
 
