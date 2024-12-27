@@ -20,5 +20,6 @@ public enum TokenType
 	UnaryOperation,
 	FunctionCall,
 	VariableExpression,
-	VariableAssignmentExpression
+	VariableAssignmentExpression,
+	FunctionAssignmentExpression
 }
