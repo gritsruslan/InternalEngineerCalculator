@@ -1,4 +1,5 @@
 using InternalEngineerCalculator.Main.Functions;
+using InternalEngineerCalculator.Main.Variables;
 
 namespace InternalEngineerCalculator.Main;
 
@@ -7,11 +8,14 @@ internal class CommandLineTool
 	// for future
 	private FunctionManager _functionManager;
 
+	private VariableManager _variableManager;
+
 	private Dictionary<string, bool> _environmentVariables;
 
-	public CommandLineTool(FunctionManager functionManager, Dictionary<string, bool>  environmentVariables)
+	public CommandLineTool(FunctionManager functionManager, VariableManager variableManager, Dictionary<string, bool>  environmentVariables)
 	{
 		_functionManager = functionManager;
+		_variableManager = variableManager;
 		_environmentVariables = environmentVariables;
 	}
 
@@ -34,8 +38,9 @@ internal class CommandLineTool
 			case "#showexpressiontree" :
 				ShowExpressionTreeCommand(args); break;
 			case "#showbasicfunctions":
-				ShowBasicFunctions(args);
-				break;
+				ShowBasicFunctions(args); break;
+			case "#showvariables":
+				ShowVariables(args); break;
 			default:
 				Console.WriteLine($"Unknown command \"{commandName}\"");
 				break;
@@ -182,6 +187,24 @@ internal class CommandLineTool
 		Console.WriteLine(
 			$"{command} command must have {mustHaveArgs} {argsString}, but {countOfArgs} {transmised} transmised");
 		Console.ForegroundColor = ConsoleColor.Gray;
+	}
+
+	private void ShowVariables(string[] args)
+	{
+		if (args.Length != 0)
+		{
+			PrintIfIncorrectCountOfArguments("ShowVariables", 0, args.Length);
+			return;
+		}
+
+		var variables = _variableManager.GetVariables();
+
+		Console.WriteLine("Variables");
+
+		foreach (var (name,value) in variables)
+			Console.WriteLine($"{name} : {value}");
+
+		Console.WriteLine();
 	}
 
 }

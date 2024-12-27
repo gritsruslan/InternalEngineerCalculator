@@ -8,5 +8,4 @@ internal abstract class Function(string name)
 
 	public abstract int CountOfArgs { get; }
 
-	public abstract double Execute(double[] args);
 }

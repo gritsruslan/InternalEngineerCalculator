@@ -1,6 +1,8 @@
 using InternalEngineerCalculator.Main.Exceptions;
+using InternalEngineerCalculator.Main.Expressions;
 using InternalEngineerCalculator.Main.Extensions;
 using InternalEngineerCalculator.Main.Functions;
+using InternalEngineerCalculator.Main.Variables;
 
 namespace InternalEngineerCalculator.Main;
 
@@ -9,6 +11,12 @@ internal class InternalEngineerCalculator
 	public readonly ConsoleColor DefaultColor = ConsoleColor.Gray;
 
 	private FunctionManager _functionManager;
+
+	private VariableManager _variableManager;
+
+	private Evaluator _evaluator;
+
+	private AssignmentExpressionHandler _assignmentExpressionHandler;
 
 	private CommandLineTool _commandLineTool;
 
@@ -23,13 +31,22 @@ internal class InternalEngineerCalculator
 		_functionManager = new FunctionManager();
 		_functionManager.InitializeDefaultFunctions();
 
-		_commandLineTool = new(_functionManager, _environmentVariables);
+		_variableManager = new VariableManager();
+		_variableManager.InitializeBasicVariables();
+
+		_evaluator = new Evaluator(_functionManager, _variableManager);
+
+		_assignmentExpressionHandler = new AssignmentExpressionHandler(_evaluator, _variableManager, _functionManager);
+
+		_commandLineTool = new(_functionManager, _variableManager, _environmentVariables);
 	}
 
 #if DEBUG
 	public void StartDebug()
 	{
 		Console.WriteLine($"InternalEngineerCalculator by @gritsruslan! : Debug Mode");
+
+
 		while (true)
 		{
 			Console.Write("> ");
@@ -49,17 +66,46 @@ internal class InternalEngineerCalculator
 			if(_environmentVariables["ShowTokens"])
 				tokens.PrintTokens();
 
-			var parser = new Parser(tokens);
-			var expression = parser.ParseExpression();
+			if (Parser.IsAssignmentExpression(tokens))
+			{
+				var parser = new Parser(tokens);
 
-			if(_environmentVariables["ShowExpressionTree"])
-				expression.PrettyPrint();
+				var assignmentExpression = parser.ParseAssignmentExpression();
 
-			var evaluator = new Evaluator(_functionManager);
-			var result = evaluator.Evaluate(expression);
+				if(_environmentVariables["ShowExpressionTree"])
+					assignmentExpression.PrettyPrint();
 
-			Console.WriteLine($"Result : {result}");
+				if (assignmentExpression is VariableAssignmentExpression ve)
+				{
+					var newVarValue = _assignmentExpressionHandler
+						.HandleVariableAssignmentExpression(ve);
+
+					Console.WriteLine(
+						$"Variable \"{assignmentExpression.Name}\" received a new value {newVarValue} !");
+				}
+				else if (assignmentExpression is FunctionAssignmentExpression fe)
+				{
+					_assignmentExpressionHandler.HandleFunctionAssignmentExpression(fe);
+
+					Console.WriteLine($"Function \"{fe.Name}\" with {fe.Args.Count} needed arguments was successfully declared!");
+				}
+			}
+			else
+			{
+				var parser = new Parser(tokens);
+				var expression = parser.ParseExpression();
+
+				if(_environmentVariables["ShowExpressionTree"])
+					expression.PrettyPrint();
+
+				var evaluator = new Evaluator(_functionManager, _variableManager);
+				var result = evaluator.Evaluate(expression);
+
+				Console.WriteLine($"Result : {result}");
+			}
 		}
+
+
 	}
 #endif
 
@@ -87,16 +133,43 @@ internal class InternalEngineerCalculator
 				if(_environmentVariables["ShowTokens"])
 					tokens.PrintTokens();
 
-				var parser = new Parser(tokens);
-				var expression = parser.ParseExpression();
+				if (Parser.IsAssignmentExpression(tokens))
+				{
+					var parser = new Parser(tokens);
 
-				if(_environmentVariables["ShowExpressionTree"])
-					expression.PrettyPrint();
+					var assignmentExpression = parser.ParseAssignmentExpression();
 
-				var evaluator = new Evaluator(_functionManager);
-				var result = evaluator.Evaluate(expression);
+					if(_environmentVariables["ShowExpressionTree"])
+						assignmentExpression.PrettyPrint();
 
-				Console.WriteLine($"Result : {result}");
+					if (assignmentExpression is VariableAssignmentExpression ve)
+					{
+						var newVarValue = _assignmentExpressionHandler
+							.HandleVariableAssignmentExpression(ve);
+
+						Console.WriteLine(
+							$"Variable \"{assignmentExpression.Name}\" received a new value {newVarValue} !");
+					}
+					else if (assignmentExpression is FunctionAssignmentExpression fe)
+					{
+						_assignmentExpressionHandler.HandleFunctionAssignmentExpression(fe);
+
+						Console.WriteLine($"Function \"{fe.Name}\" with {fe.Args.Count} needed arguments was successfully declared!");
+					}
+				}
+				else
+				{
+					var parser = new Parser(tokens);
+					var expression = parser.ParseExpression();
+
+					if(_environmentVariables["ShowExpressionTree"])
+						expression.PrettyPrint();
+
+					var evaluator = new Evaluator(_functionManager, _variableManager);
+					var result = evaluator.Evaluate(expression);
+
+					Console.WriteLine($"Result : {result}");
+				}
 			}
 			catch (CalculatorException exception)
 			{

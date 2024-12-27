@@ -35,5 +35,28 @@ internal static class ExpressionExtensions
 				functionExpression.Arguments[i].PrettyPrint(offset);
 			}
 		}
+
+		if (expression is VariableExpression variableExpression)
+			Console.WriteLine(offset + $"Variable {variableExpression.Name}");
+
+		if (expression is VariableAssignmentExpression variableAssignmentExpression)
+		{
+			Console.WriteLine($"Variable \"{variableAssignmentExpression.Name}\" assignment :");
+			offset += "  ";
+			variableAssignmentExpression.VariableValueExpression.PrettyPrint(offset);
+		}
+
+		if (expression is FunctionAssignmentExpression functionAssignmentExpression)
+		{
+			Console.WriteLine("Function assignment expression : ");
+			offset += "  ";
+			Console.WriteLine(offset + $"Function name : {functionAssignmentExpression.Name}");
+
+			foreach (var arg in functionAssignmentExpression.Args)
+				Console.WriteLine(offset + $"Argument {arg}");
+
+			Console.WriteLine(offset + "Function expression : ");
+			functionAssignmentExpression.FunctionExpression.PrettyPrint(offset);
+		}
 	}
 }

@@ -14,8 +14,12 @@ public enum TokenType
 	EndOfLine,
 	Identifier,
 	Comma,
+	EqualSign,
 
 	BinaryExpression,
 	UnaryOperation,
-	FunctionCall
+	FunctionCall,
+	VariableExpression,
+	VariableAssignmentExpression,
+	FunctionAssignmentExpression
 }
