@@ -14,23 +14,23 @@ internal sealed class Lexer(string code)
 
 	private int _position;
 
+	private readonly HashSet<char> _singleChars = ['+', '-', '*', '/', '(', ')', '^', ',', '='];
+
+	private readonly HashSet<char> _separatorChars = [' ', '\t', '\r', '\0'];
+
 	private char Current => _position < _code.Length ? _code[_position] : '\0';
 
 	private void Next() => _position++;
+
+	private bool IsSingleChar(char chr) => _singleChars.Contains(chr);
+
+	private bool IsSeparator(char chr) => _singleChars.Contains(chr) || _separatorChars.Contains(chr);
 
 	private void SkipWhitespaces()
 	{
 		while(Current != '\0' && char.IsWhiteSpace(Current))
 			Next();
 	}
-
-	private readonly HashSet<char> _singleChars = ['+', '-', '*', '/', '(', ')', '^', ',', '='];
-
-	private readonly HashSet<char> _separatorChars = [' ', '\t', '\r', '\0'];
-
-	private bool IsSingleChar(char chr) => _singleChars.Contains(chr);
-
-	private bool IsSeparator(char chr) => _singleChars.Contains(chr) || _separatorChars.Contains(chr);
 
 	public ICollection<Token> Tokenize()
 	{

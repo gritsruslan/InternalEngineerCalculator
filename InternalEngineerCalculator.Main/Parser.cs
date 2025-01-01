@@ -9,17 +9,26 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 {
 	private readonly ImmutableArray<Token> _tokens = tokens;
 
+	private readonly Token _emptyToken = new NonValueToken(TokenType.EndOfLine, string.Empty);
+
 	private int _position;
 
-	private readonly Token _emptyToken = new NonValueToken(TokenType.EndOfLine, string.Empty);
 	private Token Current => _position < _tokens.Length ? _tokens[_position] : _emptyToken;
 
 	private Token NextToken => _position + 1 < _tokens.Length ? _tokens[_position + 1] : _emptyToken;
 
-
 	private void Next() => _position++;
 
 	private void Next(int offset) => _position += offset;
+
+	private bool IsVariableAssignmentExpression() =>
+		Current.Type == TokenType.Identifier && NextToken.Type != TokenType.OpenParenthesis;
+
+	private bool IsFunctionAssignmentExpression() =>
+		Current.Type == TokenType.Identifier && NextToken.Type == TokenType.OpenParenthesis;
+
+	public static bool IsAssignmentExpression(ICollection<Token> tokens) =>
+		tokens.Any(t => t.Type == TokenType.EqualSign);
 
 	public Expression ParseExpression(int parentPrecedence = 0, bool isInFunction = false)
 	{
@@ -28,7 +37,7 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 			throw new UnexpectedTokenException();
 
 		// if its unary expression (like -5 or -9)
-		var unaryOperatorPrecedence = GetUnaryOperatorPrecedence(Current);
+		var unaryOperatorPrecedence = GetUnaryOperationPrecedence(Current);
 		if (unaryOperatorPrecedence != 0 && unaryOperatorPrecedence >= parentPrecedence)
 		{
 			var operatorToken = Current as NonValueToken;
@@ -95,14 +104,6 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 
 		return expression;
 	}
-
-	public static bool IsAssignmentExpression(ICollection<Token> tokens) => tokens.Any(t => t.Type == TokenType.EqualSign);
-
-	private bool IsVariableAssignmentExpression() =>
-		Current.Type == TokenType.Identifier && NextToken.Type != TokenType.OpenParenthesis;
-
-	private bool IsFunctionAssignmentExpression() =>
-		Current.Type == TokenType.Identifier && NextToken.Type == TokenType.OpenParenthesis;
 
 	private VariableAssignmentExpression ParseVariableAssignmentExpression()
 	{
@@ -212,7 +213,7 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 		return new FunctionCallExpression(functionName, [..expressions]);
 	}
 
-	private static int GetUnaryOperatorPrecedence(Token token)
+	private static int GetUnaryOperationPrecedence(Token token)
 	{
 		return token.Type switch
 		{
@@ -221,6 +222,7 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 			_ => 0
 		};
 	}
+
 	private static int GetOperationPrecedence(NonValueToken token)
 	{
 		return token.Type switch

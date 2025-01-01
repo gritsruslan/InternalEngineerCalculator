@@ -9,7 +9,7 @@ namespace InternalEngineerCalculator.Main;
 
 internal class InternalEngineerCalculator
 {
-	public readonly ConsoleColor DefaultColor = ConsoleColor.Gray;
+	private const ConsoleColor DefaultColor = ConsoleColor.Gray;
 
 	private readonly FunctionManager _functionManager;
 

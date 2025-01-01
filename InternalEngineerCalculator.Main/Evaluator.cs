@@ -12,33 +12,6 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 
 	private readonly VariableManager _variableManager = variableManager;
 
-
-	public double EvaluateFunction(FunctionCallExpression functionCallExpression, bool isInCustomFunction = false,
-		Dictionary<FunctionArgument, double>? functionArguments = null)
-	{
-		var header = new FunctionCallHeader(functionCallExpression.Name, functionCallExpression.CountOfArgs);
-
-		var function = _functionManager.GetFunctionByHeader(header);
-
-		double[] evaluatedArgValues = new double[functionCallExpression.CountOfArgs];
-
-		for (int i = 0; i < functionCallExpression.Arguments.Length; i++)
-		{
-			var argExpression = functionCallExpression.Arguments[i];
-			double value = Evaluate(argExpression, isInCustomFunction, functionArguments);
-			evaluatedArgValues[i] = value;
-		}
-
-		if (function is BaseFunction baseFunction)
-			return baseFunction.Function.Invoke(evaluatedArgValues);
-
-		if (function is CustomFunction customFunction)
-			return EvaluateCustomFunction(customFunction, evaluatedArgValues);
-
-		throw new Exception("Incorrect function call!");
-
-	}
-
 	public double Evaluate(Expression expression, bool isInCustomFunction = false,
 		Dictionary<FunctionArgument, double>? functionArguments = null)
 	{
@@ -87,6 +60,32 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 		};
 
 		return result;
+	}
+
+	private double EvaluateFunction(FunctionCallExpression functionCallExpression, bool isInCustomFunction = false,
+		Dictionary<FunctionArgument, double>? functionArguments = null)
+	{
+		var header = new FunctionCallHeader(functionCallExpression.Name, functionCallExpression.CountOfArgs);
+
+		var function = _functionManager.GetFunctionByHeader(header);
+
+		double[] evaluatedArgValues = new double[functionCallExpression.CountOfArgs];
+
+		for (int i = 0; i < functionCallExpression.Arguments.Length; i++)
+		{
+			var argExpression = functionCallExpression.Arguments[i];
+			double value = Evaluate(argExpression, isInCustomFunction, functionArguments);
+			evaluatedArgValues[i] = value;
+		}
+
+		if (function is BaseFunction baseFunction)
+			return baseFunction.Function.Invoke(evaluatedArgValues);
+
+		if (function is CustomFunction customFunction)
+			return EvaluateCustomFunction(customFunction, evaluatedArgValues);
+
+		throw new Exception("Incorrect function call!");
+
 	}
 
 	private double EvaluateCustomFunction(CustomFunction customFunction, double[] args)
