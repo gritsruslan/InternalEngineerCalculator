@@ -11,17 +11,17 @@ internal class InternalEngineerCalculator
 {
 	public readonly ConsoleColor DefaultColor = ConsoleColor.Gray;
 
-	private FunctionManager _functionManager;
+	private readonly FunctionManager _functionManager;
 
-	private VariableManager _variableManager;
+	private readonly VariableManager _variableManager;
 
-	private Evaluator _evaluator;
+	private readonly Evaluator _evaluator;
 
-	private AssignmentExpressionHandler _assignmentExpressionHandler;
+	private readonly AssignmentExpressionHandler _assignmentExpressionHandler;
 
-	private CommandLineTool _commandLineTool;
+	private readonly CommandLineTool _commandLineTool;
 
-	private Dictionary<string, bool> _environmentVariables = new()
+	private readonly Dictionary<string, bool> _environmentVariables = new()
 	{
 		{ "ShowTokens", false },
 		{ "ShowExpressionTree", false },

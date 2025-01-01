@@ -4,7 +4,7 @@ namespace InternalEngineerCalculator.Main.Expressions;
 
 internal sealed class UnaryExpression(NonValueToken unaryOperation, Expression expression) : Expression
 {
-	public Expression Expression { get; set; } = expression;
+	public Expression Expression => expression;
 
-	public NonValueToken UnaryOperation { get; set; } = unaryOperation;
+	public NonValueToken UnaryOperation => unaryOperation;
 }

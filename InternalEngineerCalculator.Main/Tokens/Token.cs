@@ -6,7 +6,5 @@ internal abstract class Token(TokenType type, string valueString)
 
 	public TokenType Type => type;
 
-	public int Length => ValueString.Length;
-
 	public override string ToString() => Type.ToString();
 }

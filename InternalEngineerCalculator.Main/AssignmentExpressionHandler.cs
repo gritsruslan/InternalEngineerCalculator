@@ -4,20 +4,16 @@ using InternalEngineerCalculator.Main.Variables;
 
 namespace InternalEngineerCalculator.Main;
 
-internal class AssignmentExpressionHandler
+internal class AssignmentExpressionHandler(
+	Evaluator evaluator,
+	VariableManager variableManager,
+	FunctionManager functionManager)
 {
-	private Evaluator _evaluator;
+	private readonly Evaluator _evaluator = evaluator;
 
-	private VariableManager _variableManager;
+	private readonly VariableManager _variableManager = variableManager;
 
-	private FunctionManager _functionManager;
-
-	public AssignmentExpressionHandler(Evaluator evaluator, VariableManager variableManager, FunctionManager functionManager)
-	{
-		_variableManager = variableManager;
-		_functionManager = functionManager;
-		_evaluator = evaluator;
-	}
+	private readonly FunctionManager _functionManager = functionManager;
 
 	public void HandleFunctionAssignmentExpression(FunctionAssignmentExpression functionExpression)
 	{

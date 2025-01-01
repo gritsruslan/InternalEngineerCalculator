@@ -6,6 +6,7 @@ internal sealed class CustomFunction(string name, IReadOnlyList<FunctionArgument
 	: Function(name)
 {
 	public Expression FunctionExpression => functionExpression;
+
 	public IReadOnlyList<FunctionArgument> Arguments { get; } = arguments;
 
 	public override bool IsBaseFunction => false;

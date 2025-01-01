@@ -1,8 +1,6 @@
 using System.Collections.Immutable;
-using InternalEngineerCalculator.Main.Expressions;
-using InternalEngineerCalculator.Main.Tokens;
 
-namespace InternalEngineerCalculator.Main;
+namespace InternalEngineerCalculator.Main.Expressions;
 
 internal sealed class FunctionCallExpression(string name, ImmutableArray<Expression> arguments) : Expression
 {

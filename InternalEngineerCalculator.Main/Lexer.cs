@@ -8,9 +8,9 @@ namespace InternalEngineerCalculator.Main;
 
 internal sealed class Lexer(string code)
 {
-	private List<Token> _tokens = [];
+	private readonly List<Token> _tokens = [];
 
-	private string _code = code;
+	private readonly string _code = code;
 
 	private int _position;
 

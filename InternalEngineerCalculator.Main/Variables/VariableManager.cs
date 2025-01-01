@@ -4,8 +4,8 @@ namespace InternalEngineerCalculator.Main.Variables;
 
 internal sealed class VariableManager
 {
-	private Dictionary<string, Variable> _variablesContainer = [];
-	internal Dictionary<string, Variable> GetVariables() => _variablesContainer;
+	private readonly Dictionary<string, Variable> _variablesContainer = [];
+	internal IReadOnlyDictionary<string, Variable> GetVariables() => _variablesContainer;
 
 	public void InitializeBasicVariables()
 	{

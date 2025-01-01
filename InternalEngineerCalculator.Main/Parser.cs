@@ -5,9 +5,9 @@ using InternalEngineerCalculator.Main.Tokens;
 
 namespace InternalEngineerCalculator.Main;
 
-internal sealed class Parser
+internal sealed class Parser(ImmutableArray<Token> tokens)
 {
-	private readonly ImmutableArray<Token> _tokens;
+	private readonly ImmutableArray<Token> _tokens = tokens;
 
 	private int _position;
 
@@ -20,11 +20,6 @@ internal sealed class Parser
 	private void Next() => _position++;
 
 	private void Next(int offset) => _position += offset;
-
-	public Parser(ImmutableArray<Token> tokens)
-	{
-		_tokens = tokens;
-	}
 
 	public Expression ParseExpression(int parentPrecedence = 0, bool isInFunction = false)
 	{
@@ -109,7 +104,7 @@ internal sealed class Parser
 	private bool IsFunctionAssignmentExpression() =>
 		Current.Type == TokenType.Identifier && NextToken.Type == TokenType.OpenParenthesis;
 
-	public VariableAssignmentExpression ParseVariableAssignmentExpression()
+	private VariableAssignmentExpression ParseVariableAssignmentExpression()
 	{
 		if (Current.Type != TokenType.Identifier)
 			throw new CalculatorException("Incorrect variable assignment expression!");
@@ -129,7 +124,7 @@ internal sealed class Parser
 		return new VariableAssignmentExpression(variableIdentifierToken, variableExpression);
 	}
 
-	public FunctionAssignmentExpression ParseFunctionAssignmentExpression()
+	private FunctionAssignmentExpression ParseFunctionAssignmentExpression()
 	{
 		var functionName = Current.ValueString;
 
@@ -248,7 +243,7 @@ internal sealed class Parser
 			throw new EndOfInputException();
 
 		Expression expr;
-		// if current token is open parenthesis - parse in parenthesis expression first of all
+		// if current token is open parenthesis - parse in parentheses expression first of all
 		if (Current.Type == TokenType.OpenParenthesis)
 		{
 			Next();
@@ -262,7 +257,7 @@ internal sealed class Parser
 				throw new UnexpectedTokenException(Current.Type,TokenType.CloseParenthesis );
 
 			Next();
-			return expr; // return in parenthesises expression as a single whole
+			return expr; // return in parentheses expression as a single whole
 		}
 
 		// if its not open parenthesis token than its must be a number!
