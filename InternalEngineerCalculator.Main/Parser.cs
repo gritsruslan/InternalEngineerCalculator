@@ -6,13 +6,15 @@ namespace InternalEngineerCalculator.Main;
 
 internal sealed class Parser
 {
-	private List<Token> _tokens;
+	private readonly List<Token> _tokens;
 
 	private int _position;
 
-	private Token? Current => _position < _tokens.Count ? _tokens[_position] : null;
+	private readonly Token _emptyToken = new NonValueToken(TokenType.EndOfLine, -1, string.Empty);
+	private Token Current => _position < _tokens.Count ? _tokens[_position] : _emptyToken;
 
-	private Token? NextToken => _position + 1 < _tokens.Count ? _tokens[_position + 1] : null;
+	private Token NextToken => _position + 1 < _tokens.Count ? _tokens[_position + 1] : _emptyToken;
+
 
 	private void Next() => _position++;
 	public Parser(List<Token> tokens)
@@ -23,7 +25,7 @@ internal sealed class Parser
 	public Expression ParseExpression(int parentPrecedence = 0, bool isInFunction = false)
 	{
 		Expression left;
-		if (Current is null)
+		if (Current.Type == TokenType.EndOfLine)
 			throw new UnexpectedTokenException();
 
 		// if its unary expression (like -5 or -9)
@@ -35,12 +37,12 @@ internal sealed class Parser
 			var operand = ParseExpression(unaryOperatorPrecedence);
 			left = new UnaryExpression(operatorToken!, operand);
 		}
-		//if has no unary operator
+		//if it has no unary operator
 		else
 		{
 			if (Current.Type == TokenType.Identifier)
 			{
-				if (NextToken?.Type == TokenType.OpenParenthesis)
+				if (NextToken.Type == TokenType.OpenParenthesis)
 					left = ParseFunction();
 				else
 					left = ParseVariable();
@@ -53,7 +55,7 @@ internal sealed class Parser
 
 		while (true)
 		{
-			if(Current is null)
+			if(Current.Type == TokenType.EndOfLine)
 				break;
 
 			// break if current token is function separator and its in function right now
@@ -97,28 +99,22 @@ internal sealed class Parser
 
 	public static bool IsAssignmentExpression(List<Token> tokens) => tokens.Any(t => t.Type == TokenType.EqualSign);
 
-	private bool IsVariableAssignmentExpression()
-	{
-		return Current is not null && Current.Type == TokenType.Identifier
-		                           && NextToken is not null && NextToken.Type != TokenType.OpenParenthesis;
-	}
+	private bool IsVariableAssignmentExpression() =>
+		Current.Type == TokenType.Identifier && NextToken.Type != TokenType.OpenParenthesis;
 
-	private bool IsFunctionAssignmentExpression()
-	{
-		return Current is not null && Current.Type == TokenType.Identifier
-		                           && NextToken is not null && NextToken.Type == TokenType.OpenParenthesis;
-	}
+	private bool IsFunctionAssignmentExpression() =>
+		Current.Type == TokenType.Identifier && NextToken.Type == TokenType.OpenParenthesis;
 
 	public VariableAssignmentExpression ParseVariableAssignmentExpression()
 	{
-		if (Current!.Type != TokenType.Identifier)
+		if (Current.Type != TokenType.Identifier)
 			throw new CalculatorException("Incorrect variable assignment expression!");
 
 		var variableIdentifierToken = Current;
 
 		Next();
 
-		if (Current is null || Current.Type != TokenType.EqualSign)
+		if (Current.Type != TokenType.EqualSign)
 			throw new CalculatorException(
 				"Expected equal sign token after variable name in variable assignment expression!");
 
@@ -131,7 +127,7 @@ internal sealed class Parser
 
 	public FunctionAssignmentExpression ParseFunctionAssignmentExpression()
 	{
-		var functionName = Current!.ValueString;
+		var functionName = Current.ValueString;
 
 		var args = new List<string>();
 
@@ -143,16 +139,16 @@ internal sealed class Parser
 
 		Next();
 
-		if (Current is not null && Current.Type == TokenType.CloseParenthesis)
+		if (Current.Type == TokenType.CloseParenthesis)
 			throw new CalculatorException("Function must take at least 1 argument!");
 
-		while (Current is not null && Current.Type != TokenType.CloseParenthesis)
+		while (Current.Type != TokenType.EndOfLine && Current.Type != TokenType.CloseParenthesis)
 		{
 			args.Add(Current.ValueString);
 
 			Next();
 
-			if (Current is null)
+			if (Current.Type == TokenType.EndOfLine)
 				throw new CalculatorException("Function declaration must have close parenthesis!");
 
 			if(Current.Type != TokenType.Comma && Current.Type != TokenType.CloseParenthesis)
@@ -161,18 +157,18 @@ internal sealed class Parser
 			if(Current.Type == TokenType.Comma)
 				Next();
 
-			if (Current is null)
+			if (Current.Type == TokenType.EndOfLine)
 				throw new CalculatorException("Expected close parenthesis in function declaration!");
 		}
 
 		Next();
 
-		if (Current is not null && Current.Type != TokenType.EqualSign)
+		if (Current.Type != TokenType.EqualSign)
 			throw new CalculatorException("Expected equal sign after header in function declaration");
 
 		Next();
 
-		if (Current is null)
+		if (Current.Type == TokenType.EndOfLine)
 			throw new CalculatorException("Function cant be empty!");
 
 		var functionExpression = ParseExpression();
@@ -184,34 +180,34 @@ internal sealed class Parser
 	{
 		var identifierToken = Current;
 		Next();
-		return new VariableExpression(identifierToken!);
+		return new VariableExpression(identifierToken);
 	}
 
 	private FunctionCallExpression ParseFunction()
 	{
-		var functionName = Current!.ValueString;
+		var functionName = Current.ValueString;
 
 		// skip function name token and open parenthesis token
 		Next();
 
-		if (Current is null || Current.Type != TokenType.OpenParenthesis)
+		if (Current.Type != TokenType.OpenParenthesis)
 			throw new CalculatorException("Expected open parenthesis token in start of a function call!");
 
 		Next();
 
-		if (Current is null)
+		if (Current.Type == TokenType.EndOfLine)
 			throw new EndOfInputException();
 		if (Current.Type == TokenType.CloseParenthesis)
 			throw new CalculatorException("Function cannot have zero arguments!");
 
-		List<Expression> expressions = new List<Expression>();
+		var expressions = new List<Expression>();
 
 		// while the function is finished parsing its arguments into expressions
 		while (Current.Type != TokenType.CloseParenthesis)
 		{
 			expressions.Add(ParseExpression(isInFunction: true));
 
-			if (Current is null)
+			if (Current.Type == TokenType.EndOfLine)
 				throw new CalculatorException("Function call must have close parenthesis!");
 
 			if (Current.Type != TokenType.Comma && Current.Type != TokenType.CloseParenthesis)
@@ -220,7 +216,7 @@ internal sealed class Parser
 			if(Current.Type == TokenType.Comma)
 				Next(); // skip comma
 
-			if (Current is null)
+			if (Current.Type == TokenType.EndOfLine)
 				throw new EndOfInputException();
 		}
 
@@ -255,7 +251,7 @@ internal sealed class Parser
 
 	private Expression ParseParenthesis()
 	{
-		if (Current == null)
+		if (Current.Type == TokenType.EndOfLine)
 			throw new EndOfInputException();
 
 		Expression expr;
@@ -266,7 +262,7 @@ internal sealed class Parser
 			// parse in parenthesis expression
 			expr = ParseExpression();
 
-			if (Current == null)
+			if (Current.Type == TokenType.EndOfLine)
 				throw new EndOfInputException();
 
 			if (Current.Type != TokenType.CloseParenthesis)
