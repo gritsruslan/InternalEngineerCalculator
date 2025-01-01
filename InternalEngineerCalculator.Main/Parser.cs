@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using InternalEngineerCalculator.Main.Exceptions;
 using InternalEngineerCalculator.Main.Expressions;
 using InternalEngineerCalculator.Main.Tokens;
@@ -6,18 +7,21 @@ namespace InternalEngineerCalculator.Main;
 
 internal sealed class Parser
 {
-	private readonly List<Token> _tokens;
+	private readonly ImmutableArray<Token> _tokens;
 
 	private int _position;
 
 	private readonly Token _emptyToken = new NonValueToken(TokenType.EndOfLine, -1, string.Empty);
-	private Token Current => _position < _tokens.Count ? _tokens[_position] : _emptyToken;
+	private Token Current => _position < _tokens.Length ? _tokens[_position] : _emptyToken;
 
-	private Token NextToken => _position + 1 < _tokens.Count ? _tokens[_position + 1] : _emptyToken;
+	private Token NextToken => _position + 1 < _tokens.Length ? _tokens[_position + 1] : _emptyToken;
 
 
 	private void Next() => _position++;
-	public Parser(List<Token> tokens)
+
+	private void Next(int offset) => _position += offset;
+
+	public Parser(ImmutableArray<Token> tokens)
 	{
 		_tokens = tokens;
 	}
@@ -97,7 +101,7 @@ internal sealed class Parser
 		return expression;
 	}
 
-	public static bool IsAssignmentExpression(List<Token> tokens) => tokens.Any(t => t.Type == TokenType.EqualSign);
+	public static bool IsAssignmentExpression(ICollection<Token> tokens) => tokens.Any(t => t.Type == TokenType.EqualSign);
 
 	private bool IsVariableAssignmentExpression() =>
 		Current.Type == TokenType.Identifier && NextToken.Type != TokenType.OpenParenthesis;
@@ -131,13 +135,7 @@ internal sealed class Parser
 
 		var args = new List<string>();
 
-		Next();
-
-		if (Current.Type != TokenType.OpenParenthesis)
-			throw new CalculatorException(
-				"Expected open parenthesis in start of a function declaration after func name");
-
-		Next();
+		Next(2);
 
 		if (Current.Type == TokenType.CloseParenthesis)
 			throw new CalculatorException("Function must take at least 1 argument!");
@@ -188,12 +186,7 @@ internal sealed class Parser
 		var functionName = Current.ValueString;
 
 		// skip function name token and open parenthesis token
-		Next();
-
-		if (Current.Type != TokenType.OpenParenthesis)
-			throw new CalculatorException("Expected open parenthesis token in start of a function call!");
-
-		Next();
+		Next(2);
 
 		if (Current.Type == TokenType.EndOfLine)
 			throw new EndOfInputException();

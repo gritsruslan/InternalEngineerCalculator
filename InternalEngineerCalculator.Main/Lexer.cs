@@ -32,7 +32,7 @@ internal sealed class Lexer(string code)
 
 	private bool IsSeparator(char chr) => _singleChars.Contains(chr) || _separatorChars.Contains(chr);
 
-	public List<Token> Tokenize()
+	public ICollection<Token> Tokenize()
 	{
 		while (true)
 		{
@@ -65,7 +65,6 @@ internal sealed class Lexer(string code)
 		var identifierToken = ProcessIdentifier();
 
 		return identifierToken;
-		//throw new CalculatorException($"Unknown identifier \"{identifierToken.ValueString}\"!");
 	}
 
 	private Option<NumberToken> ProcessIfNumberToken()
