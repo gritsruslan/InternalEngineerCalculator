@@ -3,7 +3,6 @@ namespace InternalEngineerCalculator.Main.Tokens;
 public enum TokenType
 {
 	Number,
-
 	Plus,
 	Minus,
 	Divide,
@@ -15,11 +14,4 @@ public enum TokenType
 	Identifier,
 	Comma,
 	EqualSign,
-
-	BinaryExpression,
-	UnaryOperation,
-	FunctionCall,
-	VariableExpression,
-	VariableAssignmentExpression,
-	FunctionAssignmentExpression
 }

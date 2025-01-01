@@ -12,6 +12,4 @@ internal class FunctionAssignmentExpression(string name, ImmutableArray<string> 
 	public override string Name => name;
 
 	public override Expression Expression => expression;
-
-	public override TokenType Type => TokenType.FunctionAssignmentExpression;
 }

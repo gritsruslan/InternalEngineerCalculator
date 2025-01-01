@@ -7,6 +7,4 @@ internal sealed class UnaryExpression(NonValueToken unaryOperation, Expression e
 	public Expression Expression { get; set; } = expression;
 
 	public NonValueToken UnaryOperation { get; set; } = unaryOperation;
-
-	public override TokenType Type => TokenType.UnaryOperation;
 }

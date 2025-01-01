@@ -10,7 +10,5 @@ internal sealed class FunctionCallExpression(string name, ImmutableArray<Express
 
 	public readonly ImmutableArray<Expression> Arguments = arguments;
 
-	public override TokenType Type => TokenType.FunctionCall;
-
 	public int CountOfArgs => Arguments.Length;
 }

@@ -7,6 +7,4 @@ internal sealed class BinaryExpression(Expression left, NonValueToken operation,
 	public Expression Left { get; } = left;
 	public NonValueToken Operation { get; } = operation;
 	public Expression Right { get; } = right;
-
-	public override TokenType Type => TokenType.BinaryExpression;
 }

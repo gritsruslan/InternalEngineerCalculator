@@ -9,6 +9,4 @@ internal class VariableAssignmentExpression(Token identifierToken, Expression ex
 	public override Expression Expression => expression;
 
 	public override string Name => IdentifierToken.ValueString;
-
-	public override TokenType Type => TokenType.VariableAssignmentExpression;
 }

@@ -7,6 +7,4 @@ internal class VariableExpression(Token identifierToken) : Expression
 	private Token _variableToken = identifierToken;
 
 	public string Name => _variableToken.ValueString;
-
-	public override TokenType Type => TokenType.VariableExpression;
 }
