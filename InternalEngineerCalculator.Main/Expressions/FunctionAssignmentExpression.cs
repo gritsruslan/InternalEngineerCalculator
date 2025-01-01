@@ -1,10 +1,11 @@
+using System.Collections.Immutable;
 using InternalEngineerCalculator.Main.Tokens;
 
 namespace InternalEngineerCalculator.Main.Expressions;
 
-internal class FunctionAssignmentExpression(string name, List<string> args, Expression functionExpression) : AssignmentExpression
+internal class FunctionAssignmentExpression(string name, ImmutableArray<string> args, Expression functionExpression) : AssignmentExpression
 {
-	private List<string> _args = args;
+	private ImmutableArray<string> _args = args;
 
 	public override string Name { get; } = name;
 

@@ -171,7 +171,7 @@ internal sealed class Parser
 
 		var functionExpression = ParseExpression();
 
-		return new FunctionAssignmentExpression(functionName, args, functionExpression);
+		return new FunctionAssignmentExpression(functionName, [..args], functionExpression);
 	}
 
 	private VariableExpression ParseVariable()
@@ -214,7 +214,7 @@ internal sealed class Parser
 		}
 
 		Next(); // skip close parenthesis
-		return new FunctionCallExpression(functionName, expressions.ToArray());
+		return new FunctionCallExpression(functionName, [..expressions]);
 	}
 
 	private static int GetUnaryOperatorPrecedence(Token token)

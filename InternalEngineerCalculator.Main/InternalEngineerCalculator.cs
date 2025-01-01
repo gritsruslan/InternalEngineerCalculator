@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using InternalEngineerCalculator.Main.Exceptions;
 using InternalEngineerCalculator.Main.Expressions;
 using InternalEngineerCalculator.Main.Extensions;
@@ -61,7 +62,7 @@ internal class InternalEngineerCalculator
 				continue;
 			}
 
-			var tokens = new Lexer(input).Tokenize();
+			var tokens = new Lexer(input).Tokenize().ToImmutableArray();
 
 			if(_environmentVariables["ShowTokens"])
 				tokens.PrintTokens();
@@ -128,7 +129,7 @@ internal class InternalEngineerCalculator
 					continue;
 				}
 
-				var tokens = new Lexer(input).Tokenize();
+				var tokens = new Lexer(input).Tokenize().ToImmutableArray();
 
 				if(_environmentVariables["ShowTokens"])
 					tokens.PrintTokens();
