@@ -29,6 +29,18 @@ public class Result<T>
 		IsSuccess = true;
 	}
 
+	public bool TryGetValue(out T value)
+	{
+		if (IsFailure)
+		{
+			value = default!;
+			return false;
+		}
+
+		value = _value;
+		return true;
+	}
+
 
 	public static implicit operator Result<T>(T value) => new(value);
 
