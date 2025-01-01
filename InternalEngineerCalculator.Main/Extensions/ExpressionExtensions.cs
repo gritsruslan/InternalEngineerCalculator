@@ -43,7 +43,7 @@ internal static class ExpressionExtensions
 		{
 			Console.WriteLine($"Variable \"{variableAssignmentExpression.Name}\" assignment :");
 			offset += "  ";
-			variableAssignmentExpression.VariableValueExpression.PrettyPrint(offset);
+			variableAssignmentExpression.Expression.PrettyPrint(offset);
 		}
 
 		if (expression is FunctionAssignmentExpression functionAssignmentExpression)
@@ -56,7 +56,7 @@ internal static class ExpressionExtensions
 				Console.WriteLine(offset + $"Argument {arg}");
 
 			Console.WriteLine(offset + "Function expression : ");
-			functionAssignmentExpression.FunctionExpression.PrettyPrint(offset);
+			functionAssignmentExpression.Expression.PrettyPrint(offset);
 		}
 	}
 }

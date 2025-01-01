@@ -2,11 +2,11 @@ using InternalEngineerCalculator.Main.Tokens;
 
 namespace InternalEngineerCalculator.Main.Expressions;
 
-internal class VariableAssignmentExpression(Token identifierToken, Expression variableValueExpression) : AssignmentExpression
+internal class VariableAssignmentExpression(Token identifierToken, Expression expression) : AssignmentExpression
 {
-	public Token IdentifierToken { get; } = identifierToken;
+	public Token IdentifierToken => identifierToken;
 
-	public Expression VariableValueExpression { get; } = variableValueExpression;
+	public override Expression Expression => expression;
 
 	public override string Name => IdentifierToken.ValueString;
 

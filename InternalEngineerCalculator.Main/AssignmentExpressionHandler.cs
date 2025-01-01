@@ -24,14 +24,14 @@ internal class AssignmentExpressionHandler
 		_functionManager.CreateNewCustomFunction(
 			functionExpression.Name,
 			functionExpression.Args,
-			functionExpression.FunctionExpression);
+			functionExpression.Expression);
 	}
 
 	public double HandleVariableAssignmentExpression(VariableAssignmentExpression variableExpression)
 	{
 		var variableName = variableExpression.Name;
 
-		var variableValue = _evaluator.Evaluate(variableExpression.VariableValueExpression);
+		var variableValue = _evaluator.Evaluate(variableExpression.Expression);
 
 		_variableManager.InitializeOrUpdateVariable(variableName, variableValue);
 

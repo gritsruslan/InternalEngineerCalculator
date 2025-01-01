@@ -3,15 +3,15 @@ using InternalEngineerCalculator.Main.Tokens;
 
 namespace InternalEngineerCalculator.Main.Expressions;
 
-internal class FunctionAssignmentExpression(string name, ImmutableArray<string> args, Expression functionExpression) : AssignmentExpression
+internal class FunctionAssignmentExpression(string name, ImmutableArray<string> args, Expression expression) : AssignmentExpression
 {
-	private ImmutableArray<string> _args = args;
-
-	public override string Name { get; } = name;
+	private readonly ImmutableArray<string> _args = args;
 
 	public IReadOnlyList<string> Args => _args;
 
-	public Expression FunctionExpression { get; } = functionExpression;
+	public override string Name => name;
+
+	public override Expression Expression => expression;
 
 	public override TokenType Type => TokenType.FunctionAssignmentExpression;
 }
