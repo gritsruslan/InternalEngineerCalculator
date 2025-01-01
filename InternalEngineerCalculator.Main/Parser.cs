@@ -11,7 +11,7 @@ internal sealed class Parser
 
 	private int _position;
 
-	private readonly Token _emptyToken = new NonValueToken(TokenType.EndOfLine, -1, string.Empty);
+	private readonly Token _emptyToken = new NonValueToken(TokenType.EndOfLine, string.Empty);
 	private Token Current => _position < _tokens.Length ? _tokens[_position] : _emptyToken;
 
 	private Token NextToken => _position + 1 < _tokens.Length ? _tokens[_position + 1] : _emptyToken;

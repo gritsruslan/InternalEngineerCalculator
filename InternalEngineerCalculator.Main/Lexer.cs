@@ -52,7 +52,7 @@ internal sealed class Lexer(string code)
 		SkipWhitespaces();
 
 		if (Current == '\0')
-			return new NonValueToken(TokenType.EndOfLine, -1, "\0");
+			return new NonValueToken(TokenType.EndOfLine, "\0");
 
 		var numberTokenOpt = ProcessIfNumberToken();
 		if (numberTokenOpt.IsSome)
@@ -75,7 +75,6 @@ internal sealed class Lexer(string code)
 		const char dot = '.';
 		var tokenString = string.Empty;
 		bool hasDot = false;
-		int startPosition = _position;
 
 		do
 		{
@@ -93,7 +92,7 @@ internal sealed class Lexer(string code)
 		if (!double.TryParse(tokenString, NumberStyles.Float, CultureInfo.InvariantCulture, out var tokenValue))
 			throw new CalculatorException($"The entry \"{tokenString}\" cannot be represented as a number.");
 
-		return new NumberToken(tokenString,startPosition, tokenValue);
+		return new NumberToken(tokenString, tokenValue);
 	}
 
 	private Option<NonValueToken> ProcessIfSingleCharToken()
@@ -115,24 +114,23 @@ internal sealed class Lexer(string code)
 			_ => throw new CalculatorException("Unknown single char operator!")
 		};
 
-		var position = _position;
 		var valueString = Current.ToString();
 
 		Next();
 
-		return new NonValueToken(singleCharTokenType, position, valueString);
+		return new NonValueToken(singleCharTokenType, valueString);
 	}
 
 	private NonValueToken ProcessIdentifier()
 	{
 		StringBuilder sb = new StringBuilder();
-		int startPosition = _position;
+
 		while (!IsSeparator(Current))
 		{
 			sb.Append(Current);
 			Next();
 		}
 
-		return new NonValueToken(TokenType.Identifier, startPosition, sb.ToString());
+		return new NonValueToken(TokenType.Identifier, sb.ToString());
 	}
 }

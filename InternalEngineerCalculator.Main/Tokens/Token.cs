@@ -1,10 +1,8 @@
 namespace InternalEngineerCalculator.Main.Tokens;
 
-internal abstract class Token(TokenType type, int position, string valueString)
+internal abstract class Token(TokenType type, string valueString)
 {
 	public string ValueString => valueString;
-
-	public int Position => position;
 
 	public TokenType Type => type;
 
