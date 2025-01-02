@@ -1,3 +1,4 @@
+using InternalEngineerCalculator.Main.Common;
 using InternalEngineerCalculator.Main.Expressions;
 using InternalEngineerCalculator.Main.Functions;
 using InternalEngineerCalculator.Main.Variables;
@@ -15,19 +16,21 @@ internal class AssignmentExpressionHandler(
 
 	private readonly FunctionManager _functionManager = functionManager;
 
-	public void HandleFunctionAssignmentExpression(FunctionAssignmentExpression functionExpression)
+	public EmptyResult HandleFunctionAssignmentExpression(FunctionAssignmentExpression functionExpression)
 	{
-		_functionManager.CreateNewCustomFunction(
+		return _functionManager.CreateNewCustomFunction(
 			functionExpression.Name,
 			functionExpression.Args,
 			functionExpression.Expression);
 	}
 
-	public double HandleVariableAssignmentExpression(VariableAssignmentExpression variableExpression)
+	public Result<double> HandleVariableAssignmentExpression(VariableAssignmentExpression variableExpression)
 	{
 		var variableName = variableExpression.Name;
 
-		var variableValue = _evaluator.Evaluate(variableExpression.Expression);
+		var variableValueResult = _evaluator.Evaluate(variableExpression.Expression);
+		if (variableValueResult.TryGetValue(out var variableValue))
+			return variableValueResult;
 
 		_variableManager.InitializeOrUpdateVariable(variableName, variableValue);
 
