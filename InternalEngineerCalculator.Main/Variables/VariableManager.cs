@@ -15,7 +15,7 @@ internal sealed class VariableManager
 
 	public void InitializeOrUpdateVariable(string name, double value)
 	{
-		if (_variablesContainer[name].IsConstant)
+		if (_variablesContainer.TryGetValue(name, out var variable) && variable.IsConstant)
 			throw new CalculatorException($"Cannot set new value to a variable\"{name}\", because its constant!");
 
 		_variablesContainer[name] = new Variable(name, value, false);
@@ -23,9 +23,9 @@ internal sealed class VariableManager
 
 	public double GetVariableValue(string name)
 	{
-		if (!_variablesContainer.ContainsKey(name))
+		if (!_variablesContainer.TryGetValue(name, out var variable))
 			throw new CalculatorException($"Variable with name \"{name}\" is not exist!");
 
-		return _variablesContainer[name].Value;
+		return variable.Value;
 	}
 }
