@@ -3,11 +3,10 @@ using InternalEngineerCalculator.Main.Tokens;
 
 namespace InternalEngineerCalculator.Main.Expressions;
 
-internal class FunctionAssignmentExpression(string name, ImmutableArray<string> args, Expression expression) : AssignmentExpression
+internal sealed class FunctionAssignmentExpression(string name, ImmutableArray<string> args, Expression expression)
+	: AssignmentExpression
 {
-	private readonly ImmutableArray<string> _args = args;
-
-	public IReadOnlyList<string> Args => _args;
+	public ImmutableArray<string> Args => args;
 
 	public override string Name => name;
 

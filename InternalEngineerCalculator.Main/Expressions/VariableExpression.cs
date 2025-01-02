@@ -2,7 +2,7 @@ using InternalEngineerCalculator.Main.Tokens;
 
 namespace InternalEngineerCalculator.Main.Expressions;
 
-internal class VariableExpression(Token identifierToken) : Expression
+internal sealed class VariableExpression(Token identifierToken) : Expression
 {
 	private readonly Token _variableToken = identifierToken;
 

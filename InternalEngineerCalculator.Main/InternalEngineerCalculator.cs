@@ -8,7 +8,7 @@ using InternalEngineerCalculator.Main.Variables;
 
 namespace InternalEngineerCalculator.Main;
 
-internal class InternalEngineerCalculator
+internal sealed class InternalEngineerCalculator
 {
 	private const ConsoleColor DefaultColor = ConsoleColor.Gray;
 
@@ -132,7 +132,7 @@ internal class InternalEngineerCalculator
 				return;
 			}
 
-			Console.WriteLine($"Function \"{fe.Name}\" with {fe.Args.Count} needed arguments was successfully declared!");
+			Console.WriteLine($"Function \"{fe.Name}\" with {fe.Args.Length} needed arguments was successfully declared!");
 		}
 	}
 

@@ -3,7 +3,7 @@ using InternalEngineerCalculator.Main.Variables;
 
 namespace InternalEngineerCalculator.Main;
 
-internal class CommandLineTool
+internal sealed class CommandLineTool
 {
 	// for future
 	private FunctionManager _functionManager;

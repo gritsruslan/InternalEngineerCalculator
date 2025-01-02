@@ -2,7 +2,7 @@ using InternalEngineerCalculator.Main.Tokens;
 
 namespace InternalEngineerCalculator.Main.Expressions;
 
-internal class VariableAssignmentExpression(Token identifierToken, Expression expression) : AssignmentExpression
+internal sealed class VariableAssignmentExpression(Token identifierToken, Expression expression) : AssignmentExpression
 {
 	private Token IdentifierToken => identifierToken;
 

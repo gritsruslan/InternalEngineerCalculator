@@ -5,7 +5,7 @@ using InternalEngineerCalculator.Main.Variables;
 
 namespace InternalEngineerCalculator.Main;
 
-internal class AssignmentExpressionHandler(
+internal sealed class AssignmentExpressionHandler(
 	Evaluator evaluator,
 	VariableManager variableManager,
 	FunctionManager functionManager)
