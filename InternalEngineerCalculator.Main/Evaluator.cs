@@ -85,7 +85,6 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 			return EvaluateCustomFunction(customFunction, evaluatedArgValues);
 
 		throw new Exception("Incorrect function call!");
-
 	}
 
 	private double EvaluateCustomFunction(CustomFunction customFunction, double[] args)
