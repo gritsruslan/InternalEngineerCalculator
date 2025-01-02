@@ -7,5 +7,4 @@ internal abstract class Function(string name)
 	public abstract bool IsBaseFunction { get; }
 
 	public abstract int CountOfArgs { get; }
-
 }

@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using InternalEngineerCalculator.Main.Exceptions;
 using InternalEngineerCalculator.Main.Expressions;
 
@@ -82,7 +83,7 @@ internal class FunctionManager
 
 		var convArgs = args.Select(arg => new FunctionArgument(arg));
 
-		var function = new CustomFunction(name, convArgs.ToList(), functionExpression);
+		var function = new CustomFunction(name, [..convArgs], functionExpression);
 
 		_functions.Add(header, function);
 	}

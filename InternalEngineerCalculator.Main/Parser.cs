@@ -229,12 +229,9 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 		{
 			TokenType.Plus => 1,
 			TokenType.Minus => 1,
-
 			TokenType.Multiply => 2,
 			TokenType.Divide => 2,
-
 			TokenType.Pow => 3,
-
 			_ => 0
 		};
 	}

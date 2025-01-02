@@ -4,9 +4,9 @@ namespace InternalEngineerCalculator.Main.Expressions;
 
 internal sealed class BinaryExpression(Expression left, NonValueToken operation, Expression right) : Expression
 {
-	public Expression Left { get; } = left;
+	public Expression Left => left;
 
-	public NonValueToken Operation { get; } = operation;
+	public NonValueToken Operation => operation;
 
-	public Expression Right { get; } = right;
+	public Expression Right => right;
 }

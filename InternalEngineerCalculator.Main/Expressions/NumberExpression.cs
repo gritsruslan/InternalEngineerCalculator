@@ -4,5 +4,5 @@ namespace InternalEngineerCalculator.Main.Expressions;
 
 internal sealed class NumberExpression(NumberToken token) : Expression
 {
-	public NumberToken Token { get; } = token;
+	public NumberToken Token => token;
 }

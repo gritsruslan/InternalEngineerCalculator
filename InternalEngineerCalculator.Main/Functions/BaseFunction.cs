@@ -8,5 +8,4 @@ internal sealed class BaseFunction(string name, int countOfArgs, Func<double[], 
 	public override int CountOfArgs => countOfArgs;
 
 	public override bool IsBaseFunction => true;
-
 }
