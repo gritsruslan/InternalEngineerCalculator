@@ -1,3 +1,4 @@
+using InternalEngineerCalculator.Main.Common;
 using InternalEngineerCalculator.Main.Exceptions;
 
 namespace InternalEngineerCalculator.Main.Variables;
@@ -13,18 +14,19 @@ internal sealed class VariableManager
 		_variablesContainer.Add("e", new Variable("e", Math.E, true));
 	}
 
-	public void InitializeOrUpdateVariable(string name, double value)
+	public EmptyResult InitializeOrUpdateVariable(string name, double value)
 	{
 		if (_variablesContainer.TryGetValue(name, out var variable) && variable.IsConstant)
-			throw new CalculatorException($"Cannot set new value to a variable\"{name}\", because its constant!");
+			return new Error($"Cannot set new value to a variable\"{name}\", because its constant!");
 
 		_variablesContainer[name] = new Variable(name, value, false);
+		return EmptyResult.Success();
 	}
 
-	public double GetVariableValue(string name)
+	public Result<double> GetVariableValue(string name)
 	{
 		if (!_variablesContainer.TryGetValue(name, out var variable))
-			throw new CalculatorException($"Variable with name \"{name}\" is not exist!");
+			return new Error($"Variable with name \"{name}\" is not exist!");
 
 		return variable.Value;
 	}
