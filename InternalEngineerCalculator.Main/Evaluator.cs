@@ -1,3 +1,4 @@
+using InternalEngineerCalculator.Main.Common;
 using InternalEngineerCalculator.Main.Exceptions;
 using InternalEngineerCalculator.Main.Expressions;
 using InternalEngineerCalculator.Main.Functions;
@@ -12,7 +13,7 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 
 	private readonly VariableManager _variableManager = variableManager;
 
-	public double Evaluate(Expression expression, bool isInCustomFunction = false,
+	public Result<double> Evaluate(Expression expression, bool isInCustomFunction = false,
 		Dictionary<FunctionArgument, double>? functionArguments = null)
 	{
 		if (expression is NumberExpression ne)
@@ -32,7 +33,9 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 
 		if (expression is UnaryExpression ue)
 		{
-			var expr = Evaluate(ue.Expression, isInCustomFunction, functionArguments);
+			var exprResult = Evaluate(ue.Expression, isInCustomFunction, functionArguments);
+			if (exprResult.TryGetValue(out var expr))
+				return exprResult;
 
 			if (ue.UnaryOperation.Type == TokenType.Minus)
 				expr *= -1;
@@ -45,9 +48,15 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 
 		var binExpression = expression as BinaryExpression;
 
-		var left = Evaluate(binExpression!.Left, isInCustomFunction, functionArguments);
+		var leftResult = Evaluate(binExpression!.Left, isInCustomFunction, functionArguments);
+		if (!leftResult.TryGetValue(out var left))
+			return leftResult;
+
 		var operation = binExpression.Operation;
-		var right = Evaluate(binExpression.Right, isInCustomFunction, functionArguments);
+
+		var rightResult = Evaluate(binExpression.Right, isInCustomFunction, functionArguments);
+		if (!rightResult.TryGetValue(out var right))
+			return rightResult;
 
 		double result = operation.Type switch
 		{
@@ -62,19 +71,25 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 		return result;
 	}
 
-	private double EvaluateFunction(FunctionCallExpression functionCallExpression, bool isInCustomFunction = false,
+	private Result<double> EvaluateFunction(FunctionCallExpression functionCallExpression, bool isInCustomFunction = false,
 		Dictionary<FunctionArgument, double>? functionArguments = null)
 	{
 		var header = new FunctionCallHeader(functionCallExpression.Name, functionCallExpression.CountOfArgs);
 
-		var function = _functionManager.GetFunctionByHeader(header);
+		var functionGetResult = _functionManager.GetFunctionByHeader(header);
+		if (!functionGetResult.TryGetValue(out var function))
+			return functionGetResult.Error;
 
 		double[] evaluatedArgValues = new double[functionCallExpression.CountOfArgs];
 
 		for (int i = 0; i < functionCallExpression.Arguments.Length; i++)
 		{
 			var argExpression = functionCallExpression.Arguments[i];
-			double value = Evaluate(argExpression, isInCustomFunction, functionArguments);
+
+			var valueResult = Evaluate(argExpression, isInCustomFunction, functionArguments);
+			if (!valueResult.TryGetValue(out var value))
+				return valueResult;
+
 			evaluatedArgValues[i] = value;
 		}
 
@@ -87,7 +102,7 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 		throw new Exception("Incorrect function call!");
 	}
 
-	private double EvaluateCustomFunction(CustomFunction customFunction, double[] args)
+	private Result<double> EvaluateCustomFunction(CustomFunction customFunction, double[] args)
 	{
 		var argumentsDictionary = new Dictionary<FunctionArgument, double>();
 
