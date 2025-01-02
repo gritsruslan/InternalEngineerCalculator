@@ -1,4 +1,4 @@
-using System.Collections.Immutable;
+using InternalEngineerCalculator.Main.Common;
 using InternalEngineerCalculator.Main.Exceptions;
 using InternalEngineerCalculator.Main.Expressions;
 
@@ -62,22 +62,22 @@ internal class FunctionManager
 		CreateNewBaseFunction("pow", 2, args => Math.Pow(args[0], args[1]));
 	}
 
-	public Function GetFunctionByHeader(FunctionCallHeader header)
+	public Result<Function> GetFunctionByHeader(FunctionCallHeader header)
 	{
 		if(_functions.TryGetValue(header, out var function))
 			return function;
 
-		throw new FunctionNotFoundException(header.FunctionName, header.CountOfArg);
+		return ErrorBuilder.FunctionNotFound(header.FunctionName, header.CountOfArg);
 	}
 
 	public bool HasFunction(FunctionCallHeader header) => _functions.ContainsKey(header);
 
-	public void CreateNewCustomFunction(string name, IReadOnlyList<string> args, Expression functionExpression)
+	public EmptyResult CreateNewCustomFunction(string name, IReadOnlyList<string> args, Expression functionExpression)
 	{
 		var header = new FunctionCallHeader(name, args.Count);
 
 		if (HasFunction(header))
-			throw new CalculatorException(
+			return new Error(
 				$"There are a function with name \"{name}\" and {args.Count} arguments. " +
 				$"If you want to override it, first of all delete old function!");
 
@@ -86,14 +86,18 @@ internal class FunctionManager
 		var function = new CustomFunction(name, [..convArgs], functionExpression);
 
 		_functions.Add(header, function);
+
+		return EmptyResult.Success();
 	}
 
-	public void DeleteFunction(string name, int countOfArgs)
+	public EmptyResult DeleteFunction(string name, int countOfArgs)
 	{
 		var header = new FunctionCallHeader(name, countOfArgs);
 
-		if(!_functions.Remove(header))
-			throw new FunctionNotFoundException(name, countOfArgs);
+		if (!_functions.Remove(header))
+			return ErrorBuilder.FunctionNotFound(name, countOfArgs);
+
+		return EmptyResult.Success();
 	}
 
 	private void CreateNewBaseFunction(string name, int countOfArgs, Func<double[], double> function)
