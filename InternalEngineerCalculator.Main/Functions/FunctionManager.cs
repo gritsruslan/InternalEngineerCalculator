@@ -1,5 +1,4 @@
 using InternalEngineerCalculator.Main.Common;
-using InternalEngineerCalculator.Main.Exceptions;
 using InternalEngineerCalculator.Main.Expressions;
 
 namespace InternalEngineerCalculator.Main.Functions;
@@ -41,8 +40,6 @@ internal class FunctionManager
 		CreateNewBaseFunction("fact", 1, args =>
 		{
 			var n = args[0];
-			if (n < 0)
-				throw new CalculatorException("The factorial of negative number is not defined!");
 
 			double result = 1;
 			for (int i = 2; i <= n; i++)

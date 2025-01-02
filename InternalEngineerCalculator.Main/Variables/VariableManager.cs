@@ -1,5 +1,4 @@
 using InternalEngineerCalculator.Main.Common;
-using InternalEngineerCalculator.Main.Exceptions;
 
 namespace InternalEngineerCalculator.Main.Variables;
 

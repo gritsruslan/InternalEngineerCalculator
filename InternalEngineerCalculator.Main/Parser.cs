@@ -1,11 +1,7 @@
 using System.Collections.Immutable;
 using InternalEngineerCalculator.Main.Common;
-using InternalEngineerCalculator.Main.Exceptions;
 using InternalEngineerCalculator.Main.Expressions;
 using InternalEngineerCalculator.Main.Tokens;
-using BinaryExpression = InternalEngineerCalculator.Main.Expressions.BinaryExpression;
-using Expression = InternalEngineerCalculator.Main.Expressions.Expression;
-using UnaryExpression = InternalEngineerCalculator.Main.Expressions.UnaryExpression;
 
 namespace InternalEngineerCalculator.Main;
 
@@ -38,7 +34,7 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 	{
 		Result<Expression> leftResult;
 		if (Current.Type == TokenType.EndOfLine)
-			throw new UnexpectedTokenException();
+			return ErrorBuilder.UnexpectedToken();
 
 		// if its unary expression (like -5 or -9)
 		var unaryOperatorPrecedence = GetUnaryOperationPrecedence(Current);
@@ -54,7 +50,7 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 		//if it has no unary operator
 		else
 		{
-			if (Current.Type is TokenType.Identifier or TokenType.OpenParenthesis)
+			if (Current.Type is TokenType.Identifier && NextToken.Type == TokenType.OpenParenthesis)
 				leftResult = ParseFunction();
 			else if (Current.Type is TokenType.Identifier)
 				leftResult = ParseVariable();
@@ -105,7 +101,7 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 		else if (IsFunctionAssignmentExpression())
 			expressionResult = ParseFunctionAssignmentExpression();
 		else
-			throw new CalculatorException("Incorrect assignment expression!");
+			throw new Exception("Incorrect assignment expression!");
 
 		return expressionResult;
 	}

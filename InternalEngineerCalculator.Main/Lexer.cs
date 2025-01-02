@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Text;
 using InternalEngineerCalculator.Main.Common;
-using InternalEngineerCalculator.Main.Exceptions;
 using InternalEngineerCalculator.Main.Tokens;
 
 namespace InternalEngineerCalculator.Main;
@@ -32,11 +31,13 @@ internal sealed class Lexer(string code)
 			Next();
 	}
 
-	public ICollection<Token> Tokenize()
+	public Result<ICollection<Token>> Tokenize()
 	{
 		while (true)
 		{
-			var token = NextToken();
+			var tokenResult = NextToken();
+			if (!tokenResult.TryGetValue(out var token))
+				return tokenResult.Error;
 
 			if(token.Type == TokenType.EndOfLine)
 				break;
@@ -47,14 +48,17 @@ internal sealed class Lexer(string code)
 		return _tokens;
 	}
 
-	private Token NextToken()
+	private Result<Token> NextToken()
 	{
 		SkipWhitespaces();
 
 		if (Current == '\0')
 			return new NonValueToken(TokenType.EndOfLine, "\0");
 
-		var numberTokenOpt = ProcessIfNumberToken();
+		var numberTokenOptResult = ProcessIfNumberToken();
+		if (!numberTokenOptResult.TryGetValue(out var numberTokenOpt))
+			return numberTokenOptResult.Error;
+
 		if (numberTokenOpt.IsSome)
 			return numberTokenOpt.Unwrap();
 
@@ -67,7 +71,7 @@ internal sealed class Lexer(string code)
 		return identifierToken;
 	}
 
-	private Option<NumberToken> ProcessIfNumberToken()
+	private Result<Option<NumberToken>> ProcessIfNumberToken()
 	{
 		if (!char.IsDigit(Current))
 			return Option<NumberToken>.None;
@@ -81,7 +85,7 @@ internal sealed class Lexer(string code)
 			if (Current == dot && !hasDot)
 				hasDot = true;
 			else if (Current == dot && hasDot)
-				throw new CalculatorException("Invalid number token!");
+				return new Error("Invalid number token!");
 
 			tokenString += Current;
 
@@ -90,9 +94,9 @@ internal sealed class Lexer(string code)
 		while (char.IsDigit(Current) || Current == dot);
 
 		if (!double.TryParse(tokenString, NumberStyles.Float, CultureInfo.InvariantCulture, out var tokenValue))
-			throw new CalculatorException($"The entry \"{tokenString}\" cannot be represented as a number.");
+			return new Error($"The entry \"{tokenString}\" cannot be represented as a number.");
 
-		return new NumberToken(tokenString, tokenValue);
+		return Option<NumberToken>.Some(new NumberToken(tokenString, tokenValue));
 	}
 
 	private Option<NonValueToken> ProcessIfSingleCharToken()
@@ -111,7 +115,7 @@ internal sealed class Lexer(string code)
 			'^' => TokenType.Pow,
 			',' => TokenType.Comma,
 			'=' => TokenType.EqualSign,
-			_ => throw new CalculatorException("Unknown single char operator!")
+			_ => throw new Exception("Unknown single char operator!")
 		};
 
 		var valueString = Current.ToString();
