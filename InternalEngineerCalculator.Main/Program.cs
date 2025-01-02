@@ -4,11 +4,12 @@ static class Program
 {
 	private static void Main()
 	{
-		var internalEngineerCalculator = new InternalEngineerCalculator();
+		InternalEngineerCalculator internalEngineerCalculator;
 #if DEBUG
-		internalEngineerCalculator.StartDebug();
+		internalEngineerCalculator = new InternalEngineerCalculator(true);
 #else
-		internalEngineerCalculator.Start();
+		internalEngineerCalculator = new InternalEngineerCalculator(false);
 #endif
+		internalEngineerCalculator.Start();
 	}
 }
