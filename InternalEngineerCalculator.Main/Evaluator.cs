@@ -1,5 +1,4 @@
 using InternalEngineerCalculator.Main.Common;
-using InternalEngineerCalculator.Main.Exceptions;
 using InternalEngineerCalculator.Main.Expressions;
 using InternalEngineerCalculator.Main.Functions;
 using InternalEngineerCalculator.Main.Tokens;
@@ -12,6 +11,12 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 	private readonly FunctionManager _functionManager = functionManager;
 
 	private readonly VariableManager _variableManager = variableManager;
+
+	private readonly HashSet<TokenType> _correctMathOperators =
+		[TokenType.Plus, TokenType.Minus, TokenType.Divide, TokenType.Multiply, TokenType.Pow];
+
+	private bool IsCorrectMathExpressionOperator(TokenType operatorType) =>
+		_correctMathOperators.Contains(operatorType);
 
 	public Result<double> Evaluate(Expression expression, bool isInCustomFunction = false,
 		Dictionary<FunctionArgument, double>? functionArguments = null)
@@ -58,14 +63,20 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 		if (!rightResult.TryGetValue(out var right))
 			return rightResult;
 
+		if (operation.Type == TokenType.Divide && right == 0)
+			return new Error("Divide by zero is not allowed!");
+
+		if (!IsCorrectMathExpressionOperator(operation.Type))
+			return new Error("Incorrect math operator!");
+
 		double result = operation.Type switch
 		{
 			TokenType.Plus => left + right,
 			TokenType.Minus => left - right,
 			TokenType.Multiply => left * right,
-			TokenType.Divide => right == 0 ? throw new CalculatorDivideByZeroException() : left/right,
+			TokenType.Divide => left/right,
 			TokenType.Pow => Math.Pow(left, right),
-			_ => throw new CalculatorException("Unknown math operator!")
+			_ => throw new Exception("Incorrect math operator!")
 		};
 
 		return result;
