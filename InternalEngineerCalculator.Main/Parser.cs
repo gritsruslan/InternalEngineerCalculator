@@ -21,11 +21,11 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 
 	private void Next(int offset) => _position += offset;
 
-	private bool IsVariableAssignmentExpression() =>
-		Current.Type == TokenType.Identifier && NextToken.Type != TokenType.OpenParenthesis;
+	private static bool IsVariableAssignmentExpression(Token currentToken, Token nextToken) =>
+		currentToken.Type == TokenType.Identifier && nextToken.Type != TokenType.OpenParenthesis;
 
-	private bool IsFunctionAssignmentExpression() =>
-		Current.Type == TokenType.Identifier && NextToken.Type == TokenType.OpenParenthesis;
+	private static bool IsFunctionAssignmentExpression(Token currentToken, Token nextToken) =>
+		currentToken.Type == TokenType.Identifier && nextToken.Type == TokenType.OpenParenthesis;
 
 	public static bool IsAssignmentExpression(ICollection<Token> tokens) =>
 		tokens.Any(t => t.Type == TokenType.EqualSign);
@@ -96,9 +96,9 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 	{
 		Result<AssignmentExpression> expressionResult;
 
-		if (IsVariableAssignmentExpression())
+		if (IsVariableAssignmentExpression(Current, NextToken))
 			expressionResult = ParseVariableAssignmentExpression();
-		else if (IsFunctionAssignmentExpression())
+		else if (IsFunctionAssignmentExpression(Current, NextToken))
 			expressionResult = ParseFunctionAssignmentExpression();
 		else
 			throw new Exception("Incorrect assignment expression!");
@@ -143,9 +143,6 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 			args.Add(Current.ValueString);
 
 			Next();
-
-			if (Current.Type == TokenType.EndOfLine)
-				return new Error("Function declaration must have close parenthesis!");
 
 			if(Current.Type != TokenType.Comma && Current.Type != TokenType.CloseParenthesis)
 				return new Error("Expected close parenthesis or comma in function declaration!");

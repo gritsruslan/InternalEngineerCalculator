@@ -16,13 +16,11 @@ internal sealed class AssignmentExpressionHandler(
 
 	private readonly FunctionManager _functionManager = functionManager;
 
-	public EmptyResult HandleFunctionAssignmentExpression(FunctionAssignmentExpression functionExpression)
-	{
-		return _functionManager.CreateNewCustomFunction(
+	public EmptyResult HandleFunctionAssignmentExpression(FunctionAssignmentExpression functionExpression) =>
+		_functionManager.CreateNewCustomFunction(
 			functionExpression.Name,
 			functionExpression.Args,
 			functionExpression.Expression);
-	}
 
 	public Result<double> HandleVariableAssignmentExpression(VariableAssignmentExpression variableExpression)
 	{
