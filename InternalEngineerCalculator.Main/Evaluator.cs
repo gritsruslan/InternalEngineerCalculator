@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using InternalEngineerCalculator.Main.Common;
 using InternalEngineerCalculator.Main.Expressions;
 using InternalEngineerCalculator.Main.Functions;
@@ -104,16 +105,18 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 			evaluatedArgValues[i] = value;
 		}
 
+		var immutableArrayEvaluatedArgs = evaluatedArgValues.ToImmutableArray();
+
 		if (function is BaseFunction baseFunction)
-			return baseFunction.Function.Invoke(evaluatedArgValues);
+			return baseFunction.Function.Invoke(immutableArrayEvaluatedArgs);
 
 		if (function is CustomFunction customFunction)
-			return EvaluateCustomFunction(customFunction, evaluatedArgValues);
+			return EvaluateCustomFunction(customFunction, immutableArrayEvaluatedArgs);
 
 		throw new Exception("Incorrect function call!");
 	}
 
-	private Result<double> EvaluateCustomFunction(CustomFunction customFunction, double[] args)
+	private Result<double> EvaluateCustomFunction(CustomFunction customFunction, ImmutableArray<double> args)
 	{
 		var argumentsDictionary = new Dictionary<FunctionArgument, double>();
 

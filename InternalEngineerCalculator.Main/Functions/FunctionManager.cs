@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using InternalEngineerCalculator.Main.Common;
 using InternalEngineerCalculator.Main.Expressions;
 
@@ -97,7 +98,7 @@ internal sealed class FunctionManager
 		return EmptyResult.Success();
 	}
 
-	private void CreateNewBaseFunction(string name, int countOfArgs, Func<double[], double> function)
+	private void CreateNewBaseFunction(string name, int countOfArgs, Func<ImmutableArray<double>, double> function)
 	{
 		_functions.Add(new FunctionCallHeader(name, countOfArgs),
 			new BaseFunction(name, countOfArgs, function));
