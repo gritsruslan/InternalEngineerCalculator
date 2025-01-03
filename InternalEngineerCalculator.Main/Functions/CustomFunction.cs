@@ -6,9 +6,9 @@ namespace InternalEngineerCalculator.Main.Functions;
 internal sealed class CustomFunction(string name, ImmutableArray<FunctionArgument> arguments, Expression functionExpression)
 	: Function(name)
 {
-	public Expression FunctionExpression => functionExpression;
+	public Expression FunctionExpression { get; } = functionExpression;
 
-	public ImmutableArray<FunctionArgument> Arguments => arguments;
+	public ImmutableArray<FunctionArgument> Arguments { get; } = arguments;
 
 	public override bool IsBaseFunction => false;
 
