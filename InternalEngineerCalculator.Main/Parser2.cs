@@ -95,16 +95,16 @@ internal sealed class Parser2(ImmutableArray<Token> tokens)
 	private Result<Expression> ParseParenthesisExpression()
 	{
 		var token = Current;
+		Next();
 
 		if (Current.Type == TokenType.Number)
-		{
-			Next();
 			return new NumberExpression((token as NumberToken)!);
-		}
+
+		if (Current.Type == TokenType.Identifier)
+			return new VariableExpression(Current);
 
 		if (Current.Type == TokenType.Minus)
 		{
-			Next();
 			var inUnaryExpressionResult = ParseExpression();
 			if (!inUnaryExpressionResult.TryGetValue(out var inUnaryExpression))
 				return inUnaryExpressionResult;
@@ -113,7 +113,6 @@ internal sealed class Parser2(ImmutableArray<Token> tokens)
 
 		if (Current.Type == TokenType.ModulePipe)
 		{
-			Next();
 			var inModuleExpressionResult = ParseExpression();
 			if (!inModuleExpressionResult.TryGetValue(out var inModuleExpression))
 				return inModuleExpressionResult;
@@ -127,7 +126,6 @@ internal sealed class Parser2(ImmutableArray<Token> tokens)
 
 		if (Current.Type == TokenType.OpenParenthesis)
 		{
-			Next();
 			var inParenthesisExpressionResult = ParseExpression();
 			if (!inParenthesisExpressionResult.TryGetValue(out var inParenthesisExpression))
 				return inParenthesisExpressionResult;
