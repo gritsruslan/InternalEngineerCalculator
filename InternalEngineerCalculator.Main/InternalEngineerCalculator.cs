@@ -138,9 +138,9 @@ internal sealed class InternalEngineerCalculator
 
 	private void HandleResultExpression(ImmutableArray<Token> tokens)
 	{
-		var parser = new Parser(tokens);
+		var parser = new Parser2(tokens);
 
-		var expressionResult = parser.ParseExpression();
+		var expressionResult = parser.Parse();
 		if (!expressionResult.TryGetValue(out var expression))
 		{
 			PrintError(expressionResult.Error);

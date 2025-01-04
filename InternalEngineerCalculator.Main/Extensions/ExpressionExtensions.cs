@@ -42,7 +42,7 @@ internal static class ExpressionExtensions
 	private static void UnaryExpressionPrint(UnaryExpression expression, ref string offset)
 	{
 		offset += "  ";
-		Console.WriteLine(offset + $"Operation {expression.UnaryOperation.ValueString}");
+		Console.WriteLine(offset + $"Operation {expression.Type}");
 		expression.Expression.PrettyPrint(offset);
 	}
 

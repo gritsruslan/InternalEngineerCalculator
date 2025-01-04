@@ -43,7 +43,7 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 			if (!exprResult.TryGetValue(out var expr))
 				return exprResult;
 
-			if (ue.UnaryOperation.Type == TokenType.Minus)
+			if (ue.Type == UnaryExpressionType.Minus)
 				expr *= -1;
 			else if (ue.Type == UnaryExpressionType.Factorial)
 			{
