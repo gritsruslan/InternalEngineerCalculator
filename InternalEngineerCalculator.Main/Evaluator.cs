@@ -40,11 +40,26 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 		if (expression is UnaryExpression ue)
 		{
 			var exprResult = Evaluate(ue.Expression, isInCustomFunction, functionArguments);
-			if (exprResult.TryGetValue(out var expr))
+			if (!exprResult.TryGetValue(out var expr))
 				return exprResult;
 
 			if (ue.UnaryOperation.Type == TokenType.Minus)
 				expr *= -1;
+			else if (ue.Type == UnaryExpressionType.Factorial)
+			{
+				var factorialResult = RMath.Factorial(expr);
+				if (factorialResult.IsSuccess)
+					expr = factorialResult.Value;
+				else
+					return factorialResult;
+			}
+			else if (ue.Type == UnaryExpressionType.Module)
+			{
+				expr = Math.Abs(expr);
+			}
+
+			//TODO Factorial parse
+
 			// Other unary operators
 			return expr;
 		}
@@ -108,13 +123,16 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 		var immutableArrayEvaluatedArgs = evaluatedArgValues.ToImmutableArray();
 
 		if (function is BaseFunction baseFunction)
-			return baseFunction.Function.Invoke(immutableArrayEvaluatedArgs);
+			return EvaluateBaseFunction(baseFunction, immutableArrayEvaluatedArgs);
 
 		if (function is CustomFunction customFunction)
 			return EvaluateCustomFunction(customFunction, immutableArrayEvaluatedArgs);
 
 		throw new Exception("Incorrect function call!");
 	}
+
+	private double EvaluateBaseFunction(BaseFunction baseFunction, ImmutableArray<double> args)
+		=> baseFunction.Function.Invoke(args);
 
 	private Result<double> EvaluateCustomFunction(CustomFunction customFunction, ImmutableArray<double> args)
 	{

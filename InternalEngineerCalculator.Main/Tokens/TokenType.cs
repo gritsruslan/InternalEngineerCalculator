@@ -13,5 +13,7 @@ public enum TokenType
 	EndOfLine,
 	Identifier,
 	Comma,
-	EqualSign
+	EqualSign,
+	Factorial,
+	Pipe
 }
