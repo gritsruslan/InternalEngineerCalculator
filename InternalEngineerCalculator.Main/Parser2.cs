@@ -46,8 +46,6 @@ internal sealed class Parser2(ImmutableArray<Token> tokens)
 			if (!rightResult.TryGetValue(out var right))
 				return rightResult;
 
-			Next();
-
 			left = new BinaryExpression(left, operationToken!, right);
 		}
 
@@ -69,7 +67,6 @@ internal sealed class Parser2(ImmutableArray<Token> tokens)
 			if (!rightResult.TryGetValue(out var right))
 				return rightResult;
 
-			Next();
 
 			left = new BinaryExpression(left, operationToken!, right);
 		}
@@ -95,16 +92,28 @@ internal sealed class Parser2(ImmutableArray<Token> tokens)
 	private Result<Expression> ParseParenthesisExpression()
 	{
 		var token = Current;
-		Next();
 
 		if (Current.Type == TokenType.Number)
+		{
+			Next();
 			return new NumberExpression((token as NumberToken)!);
+		}
+
+		if (Current.Type == TokenType.Identifier && NextToken.Type == TokenType.OpenParenthesis)
+		{
+			var exprResult =  ParseFunctionCallExpression();
+			return exprResult;
+		}
 
 		if (Current.Type == TokenType.Identifier)
-			return new VariableExpression(Current);
+		{
+			Next();
+			return new VariableExpression(token);
+		}
 
 		if (Current.Type == TokenType.Minus)
 		{
+			Next();
 			var inUnaryExpressionResult = ParseExpression();
 			if (!inUnaryExpressionResult.TryGetValue(out var inUnaryExpression))
 				return inUnaryExpressionResult;
@@ -113,6 +122,7 @@ internal sealed class Parser2(ImmutableArray<Token> tokens)
 
 		if (Current.Type == TokenType.ModulePipe)
 		{
+			Next();
 			var inModuleExpressionResult = ParseExpression();
 			if (!inModuleExpressionResult.TryGetValue(out var inModuleExpression))
 				return inModuleExpressionResult;
@@ -126,6 +136,7 @@ internal sealed class Parser2(ImmutableArray<Token> tokens)
 
 		if (Current.Type == TokenType.OpenParenthesis)
 		{
+			Next();
 			var inParenthesisExpressionResult = ParseExpression();
 			if (!inParenthesisExpressionResult.TryGetValue(out var inParenthesisExpression))
 				return inParenthesisExpressionResult;
@@ -138,5 +149,44 @@ internal sealed class Parser2(ImmutableArray<Token> tokens)
 		}
 
 		return new Error("Error in inout!");
+	}
+
+	private Result<Expression> ParseFunctionCallExpression()
+	{
+		var functionName = Current.ValueString;
+
+		// skip function name token and open parenthesis token
+		Next(2);
+
+		if (Current.Type == TokenType.EndOfLine)
+			return ErrorBuilder.EndOfInput();
+		if (Current.Type == TokenType.CloseParenthesis)
+			return new Error("Function cannot have zero arguments!");
+
+		var expressions = new List<Expression>();
+
+		// while the function is finished parsing its arguments into expressions
+		while (Current.Type != TokenType.CloseParenthesis)
+		{
+			var parseResult = ParseExpression();
+			if (!parseResult.TryGetValue(out var expression))
+				return parseResult.Error;
+			expressions.Add(expression);
+
+			if (Current.Type == TokenType.EndOfLine)
+				return new Error("Function call must have close parenthesis!");
+
+			if (Current.Type != TokenType.Comma && Current.Type != TokenType.CloseParenthesis)
+				return new Error("Expected close parenthesis or comma in function call!");
+
+			if (Current.Type == TokenType.Comma)
+				Next(); // skip comma
+
+			if (Current.Type == TokenType.EndOfLine)
+				return ErrorBuilder.EndOfInput();
+		}
+
+		Next(); // skip close parenthesis
+		return new FunctionCallExpression(functionName, [..expressions]);
 	}
 }
