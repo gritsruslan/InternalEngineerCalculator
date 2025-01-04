@@ -74,7 +74,6 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 			if (Current.Type == TokenType.Pipe)
 				break;
 
-			//TODO
 			if (Current.Type == TokenType.Factorial)
 			{
 				left = ParseUnaryFactorialExpression(left);

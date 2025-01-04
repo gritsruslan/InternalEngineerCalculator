@@ -58,8 +58,6 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 				expr = Math.Abs(expr);
 			}
 
-			//TODO Factorial parse
-
 			// Other unary operators
 			return expr;
 		}
