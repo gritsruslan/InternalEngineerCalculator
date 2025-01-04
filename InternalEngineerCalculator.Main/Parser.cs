@@ -45,7 +45,7 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 			var operandExpression = ParseExpression(unaryOperatorPrecedence);
 			if (!operandExpression.TryGetValue(out var operand))
 				return operandExpression.Error;
-			leftResult = new UnaryExpression(operatorToken!, operand, UnaryExpressionType.Minus);
+			leftResult = new UnaryExpression(operand, UnaryExpressionType.Minus);
 		}
 		else
 		{
@@ -53,7 +53,7 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 				leftResult = ParseFunction();
 			else if (Current.Type is TokenType.Identifier)
 				leftResult = ParseVariable();
-			else if (Current.Type is TokenType.Pipe)
+			else if (Current.Type is TokenType.ModulePipe)
 				leftResult = ParseUnaryModuleExpression();
 			else
 				leftResult = ParseParenthesis();
@@ -71,7 +71,7 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 			if(isInFunction && Current.Type is TokenType.Comma or TokenType.CloseParenthesis)
 				break;
 
-			if (Current.Type == TokenType.Pipe)
+			if (Current.Type == TokenType.ModulePipe)
 				break;
 
 			if (Current.Type == TokenType.Factorial)
@@ -121,13 +121,13 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 		var currentFactorialToken = (Current as NonValueToken)!;
 		if (currentExpression is UnaryExpression { Type: UnaryExpressionType.Minus } ue)
 		{
-			var insideExpression = new UnaryExpression(currentFactorialToken, ue.Expression, UnaryExpressionType.Factorial);
+			var insideExpression = new UnaryExpression(ue.Expression, UnaryExpressionType.Factorial);
 			Next();
-			return new UnaryExpression(ue.UnaryOperation, insideExpression, UnaryExpressionType.Minus);
+			return new UnaryExpression(insideExpression, UnaryExpressionType.Minus);
 		}
 
 		Next();
-		return new UnaryExpression(currentFactorialToken, currentExpression, UnaryExpressionType.Factorial);
+		return new UnaryExpression(currentExpression, UnaryExpressionType.Factorial);
 	}
 
 
@@ -139,12 +139,12 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 			return inModuleExpressionResult;
 
 		var moduleToken = (Current as NonValueToken)!;
-		if (moduleToken.Type != TokenType.Pipe)
+		if (moduleToken.Type != TokenType.ModulePipe)
 			return new Error("Must be a pipe in the end of module expression!");
 
 		Next();
 
-		return new UnaryExpression(moduleToken, inModuleExpression, UnaryExpressionType.Module);
+		return new UnaryExpression(inModuleExpression, UnaryExpressionType.Module);
 	}
 	private Result<AssignmentExpression> ParseVariableAssignmentExpression()
 	{
