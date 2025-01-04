@@ -116,7 +116,7 @@ internal sealed class Lexer(string code)
 			',' => TokenType.Comma,
 			'=' => TokenType.EqualSign,
 			'!' => TokenType.Factorial,
-			'|' => TokenType.Pipe,
+			'|' => TokenType.ModulePipe,
 			_ => throw new Exception("Unknown single char operator!")
 		};
 

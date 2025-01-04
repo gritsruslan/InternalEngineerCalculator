@@ -15,5 +15,5 @@ public enum TokenType
 	Comma,
 	EqualSign,
 	Factorial,
-	Pipe
+	ModulePipe
 }
