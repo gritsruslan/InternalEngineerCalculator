@@ -13,7 +13,7 @@ internal sealed class Lexer(string code)
 
 	private int _position;
 
-	private readonly HashSet<char> _singleChars = ['+', '-', '*', '/', '(', ')', '^', ',', '='];
+	private readonly HashSet<char> _singleChars = ['+', '-', '*', '/', '(', ')', '^', ',', '=', '!'];
 
 	private readonly HashSet<char> _separatorChars = [' ', '\t', '\r', '\0'];
 
@@ -115,6 +115,7 @@ internal sealed class Lexer(string code)
 			'^' => TokenType.Pow,
 			',' => TokenType.Comma,
 			'=' => TokenType.EqualSign,
+			'!' => TokenType.Factorial,
 			_ => throw new Exception("Unknown single char operator!")
 		};
 
