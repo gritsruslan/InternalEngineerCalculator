@@ -45,15 +45,16 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 			var operandExpression = ParseExpression(unaryOperatorPrecedence);
 			if (!operandExpression.TryGetValue(out var operand))
 				return operandExpression.Error;
-			leftResult = new UnaryExpression(operatorToken!, operand);
+			leftResult = new UnaryExpression(operatorToken!, operand, UnaryExpressionType.Minus);
 		}
-		//if it has no unary operator
 		else
 		{
 			if (Current.Type is TokenType.Identifier && NextToken.Type == TokenType.OpenParenthesis)
 				leftResult = ParseFunction();
 			else if (Current.Type is TokenType.Identifier)
 				leftResult = ParseVariable();
+			else if (Current.Type is TokenType.Pipe)
+				leftResult = ParseUnaryModuleExpression();
 			else
 				leftResult = ParseParenthesis();
 		}
@@ -69,6 +70,16 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 			// break if current token is function separator and its in function right now
 			if(isInFunction && Current.Type is TokenType.Comma or TokenType.CloseParenthesis)
 				break;
+
+			if (Current.Type == TokenType.Pipe)
+				break;
+
+			//TODO
+			if (Current.Type == TokenType.Factorial)
+			{
+				left = ParseUnaryFactorialExpression(left);
+				continue;
+			}
 
 			if (Current is not NonValueToken operatorToken)
 				return ErrorBuilder.UnexpectedToken(Current.Type.ToString(), "math operator");
@@ -106,6 +117,36 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 		return expressionResult;
 	}
 
+	private Expression ParseUnaryFactorialExpression(Expression currentExpression)
+	{
+		var currentFactorialToken = (Current as NonValueToken)!;
+		if (currentExpression is UnaryExpression { Type: UnaryExpressionType.Minus } ue)
+		{
+			var insideExpression = new UnaryExpression(currentFactorialToken, ue.Expression, UnaryExpressionType.Factorial);
+			Next();
+			return new UnaryExpression(ue.UnaryOperation, insideExpression, UnaryExpressionType.Minus);
+		}
+
+		Next();
+		return new UnaryExpression(currentFactorialToken, currentExpression, UnaryExpressionType.Factorial);
+	}
+
+
+	private Result<Expression> ParseUnaryModuleExpression()
+	{
+		Next();
+		var inModuleExpressionResult = ParseExpression();
+		if (!inModuleExpressionResult.TryGetValue(out var inModuleExpression))
+			return inModuleExpressionResult;
+
+		var moduleToken = (Current as NonValueToken)!;
+		if (moduleToken.Type != TokenType.Pipe)
+			return new Error("Must be a pipe in the end of module expression!");
+
+		Next();
+
+		return new UnaryExpression(moduleToken, inModuleExpression, UnaryExpressionType.Module);
+	}
 	private Result<AssignmentExpression> ParseVariableAssignmentExpression()
 	{
 		if (Current.Type != TokenType.Identifier)
@@ -219,12 +260,7 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 
 	private static int GetUnaryOperationPrecedence(Token token)
 	{
-		return token.Type switch
-		{
-			TokenType.Plus => 3,
-			TokenType.Minus => 3,
-			_ => 0
-		};
+		return token.Type == TokenType.Minus ? 3 : 0;
 	}
 
 	private static int GetOperationPrecedence(NonValueToken token)
