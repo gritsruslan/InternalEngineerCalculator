@@ -37,17 +37,6 @@ internal sealed class FunctionManager
 		CreateNewBaseFunction("rad", 1, args => args[0] * 180 / Math.PI);
 		//Deg
 		CreateNewBaseFunction("deg", 1, args => args[0] * Math.PI / 180);
-		//Fact
-		CreateNewBaseFunction("fact", 1, args =>
-		{
-			var n = args[0];
-
-			double result = 1;
-			for (int i = 2; i <= n; i++)
-				result *= i;
-			return result;
-		});
-
 		//Log10
 		CreateNewBaseFunction("log10", 1, args => Math.Log10(args[0]));
 		//Log
