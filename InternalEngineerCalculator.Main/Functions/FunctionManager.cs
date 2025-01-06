@@ -26,7 +26,7 @@ internal sealed class FunctionManager
 		//Sqrt2
 		CreateNewBaseFunction("sqrt", 1, args => Math.Sqrt(args[0]));
 		//SqrtN
-		CreateNewBaseFunction("sqrt", 2, args => Math.Exp(Math.Log(args[0], Math.E) / args[1]) );
+		CreateNewBaseFunction("sqrt", 2, args => RMath.Sqrt(args[0], args[1]));
 		//Floor
 		CreateNewBaseFunction("floor", 1, args => Math.Floor(args[0]));
 		//Ceil
@@ -34,17 +34,17 @@ internal sealed class FunctionManager
 		//Round
 		CreateNewBaseFunction("round", 1, args => Math.Round(args[0]));
 		//Rad
-		CreateNewBaseFunction("rad", 1, args => args[0] * 180 / Math.PI);
+		CreateNewBaseFunction("rad", 1, args => RMath.RadiansToDegree(args[0]));
 		//Deg
-		CreateNewBaseFunction("deg", 1, args => args[0] * Math.PI / 180);
+		CreateNewBaseFunction("deg", 1, args => RMath.DegreeToRadians(args[1]));
 		//Log10
 		CreateNewBaseFunction("log10", 1, args => Math.Log10(args[0]));
 		//Log
 		CreateNewBaseFunction("log", 2, args => Math.Log(args[0], args[1]));
 		//Ln
-		CreateNewBaseFunction("ln", 1, args => Math.Log(args[0], Math.E));
+		CreateNewBaseFunction("ln", 1, args => RMath.Ln(args[0]));
 		//E
-		CreateNewBaseFunction("e", 1, args => Math.Exp(args[0]));
+		CreateNewBaseFunction("exp", 1, args => Math.Exp(args[0]));
 		//Pow
 		CreateNewBaseFunction("pow", 2, args => Math.Pow(args[0], args[1]));
 	}
