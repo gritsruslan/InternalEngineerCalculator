@@ -11,6 +11,7 @@ internal sealed class VariableManager
 	{
 		_variablesContainer.Add("pi", new Variable("pi", Math.PI, true));
 		_variablesContainer.Add("e", new Variable("e", Math.E, true));
+		_variablesContainer.Add("tau", new Variable("e", Math.Tau, true));
 	}
 
 	public EmptyResult InitializeOrUpdateVariable(string name, double value)
