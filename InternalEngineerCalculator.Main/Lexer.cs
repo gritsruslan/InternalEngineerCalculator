@@ -13,7 +13,20 @@ internal sealed class Lexer(string code)
 
 	private int _position;
 
-	private readonly HashSet<char> _singleChars = ['+', '-', '*', '/', '(', ')', '^', ',', '=', '!', '|'];
+	private readonly IReadOnlyDictionary<char, TokenType> _singleCharTokens = new Dictionary<char, TokenType>()
+	{
+		{'+', TokenType.Plus},
+		{'-', TokenType.Minus},
+		{'*', TokenType.Multiply},
+		{'/', TokenType.Divide},
+		{'(', TokenType.OpenParenthesis},
+		{')', TokenType.CloseParenthesis},
+		{'^', TokenType.Pow},
+		{',', TokenType.Comma},
+		{'=', TokenType.EqualSign},
+		{'!', TokenType.Factorial},
+		{'|', TokenType.ModulePipe}
+	};
 
 	private readonly HashSet<char> _separatorChars = [' ', '\t', '\r', '\0'];
 
@@ -21,9 +34,10 @@ internal sealed class Lexer(string code)
 
 	private void Next() => _position++;
 
-	private bool IsSingleChar(char chr) => _singleChars.Contains(chr);
+	private bool IsSingleChar(char chr) => _singleCharTokens.ContainsKey(chr);
 
-	private bool IsSeparator(char chr) => _singleChars.Contains(chr) || _separatorChars.Contains(chr);
+	// single char tokens are also separators
+	private bool IsSeparator(char chr) => IsSingleChar(chr) || _separatorChars.Contains(chr);
 
 	private void SkipWhitespaces()
 	{
@@ -104,21 +118,8 @@ internal sealed class Lexer(string code)
 		if (!IsSingleChar(Current))
 			return Option<NonValueToken>.None;
 
-		TokenType singleCharTokenType = Current switch
-		{
-			'+' => TokenType.Plus,
-			'-' => TokenType.Minus,
-			'*' => TokenType.Multiply,
-			'/' => TokenType.Divide,
-			'(' => TokenType.OpenParenthesis,
-			')' => TokenType.CloseParenthesis,
-			'^' => TokenType.Pow,
-			',' => TokenType.Comma,
-			'=' => TokenType.EqualSign,
-			'!' => TokenType.Factorial,
-			'|' => TokenType.ModulePipe,
-			_ => throw new Exception("Unknown single char operator!")
-		};
+		if (_singleCharTokens.TryGetValue(Current, out var singleCharTokenType))
+			throw new Exception("Unknown single char operator!");
 
 		var valueString = Current.ToString();
 
