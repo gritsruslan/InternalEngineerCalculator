@@ -21,6 +21,13 @@ internal sealed class Parser2(ImmutableArray<Token> tokens)
 
 	private void Next(int offset) => _position += offset;
 
+	public static bool IsAssignmentExpression(IEnumerable<Token> tokens) =>
+		tokens.Any(t => t.Type == TokenType.EqualSign);
+
+	private bool IsVariableAssignmentExpression() => Current.Type == TokenType.Identifier;
+	private bool IsFunctionAssignmentExpression() =>
+		Current.Type == TokenType.Identifier && NextToken.Type == TokenType.OpenParenthesis;
+
 	public Result<Expression> Parse()
 	{
 		var expression = ParseExpression();
@@ -29,6 +36,80 @@ internal sealed class Parser2(ImmutableArray<Token> tokens)
 			return new Error("Incorrect end of expression!");
 
 		return expression;
+	}
+
+	public Result<AssignmentExpression> ParseAssignmentExpression()
+	{
+
+		if (IsFunctionAssignmentExpression())
+			return ParseFunctionAssignmentExpression();
+
+		if (IsVariableAssignmentExpression())
+			return ParseVariableAssignmentExpression();
+
+		return new Error("Incorrect assignment expression!");
+	}
+
+	private Result<AssignmentExpression> ParseVariableAssignmentExpression()
+	{
+		var variableIdentifierToken = Current;
+
+		Next();
+
+		if (Current.Type != TokenType.EqualSign)
+			return new Error("Incorrect assignment expression!");
+
+		Next();
+
+		var variableExpressionResult = Parse();
+		if (!variableExpressionResult.TryGetValue(out var variableExpression))
+			return variableExpressionResult.Error;
+
+		return new VariableAssignmentExpression(variableIdentifierToken, variableExpression);
+	}
+
+	private Result<AssignmentExpression> ParseFunctionAssignmentExpression()
+	{
+		var functionName = Current.ValueString;
+
+		var args = new List<string>();
+
+		Next(2);
+
+		if (Current.Type == TokenType.CloseParenthesis)
+			return new Error("Function must take at least 1 argument!");
+
+		while (Current.Type != TokenType.EndOfLine && Current.Type != TokenType.CloseParenthesis)
+		{
+			args.Add(Current.ValueString);
+
+			Next();
+
+			if(Current.Type != TokenType.Comma && Current.Type != TokenType.CloseParenthesis)
+				return new Error("Expected close parenthesis or comma in function declaration!");
+
+			if(Current.Type == TokenType.Comma)
+				Next();
+
+			if (Current.Type == TokenType.EndOfLine)
+				return new Error("Expected close parenthesis in function declaration!");
+		}
+
+		Next();
+
+		if (Current.Type != TokenType.EqualSign)
+			return new Error("Expected equal sign after header in function declaration");
+
+		Next();
+
+		if (Current.Type == TokenType.EndOfLine)
+			return new Error("Function cant be empty!");
+
+		var functionExpressionResult = ParseExpression();
+		if (!functionExpressionResult.TryGetValue(out var functionExpression))
+			return functionExpressionResult.Error;
+
+		return new FunctionAssignmentExpression(functionName, [..args], functionExpression);
 	}
 
 	private Result<Expression> ParseExpression()
@@ -51,6 +132,7 @@ internal sealed class Parser2(ImmutableArray<Token> tokens)
 
 		return left;
 	}
+
 
 	private Result<Expression> ParseTerm()
 	{
