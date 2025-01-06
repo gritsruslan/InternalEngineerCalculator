@@ -58,7 +58,7 @@ internal sealed class Parser2(ImmutableArray<Token> tokens)
 		if (!leftResult.TryGetValue(out var left))
 			return leftResult;
 
-		while (Current.Type is TokenType.Divide or TokenType.Multiply)
+		while (Current.Type is TokenType.Divide or TokenType.Multiply or TokenType.Remainder)
 		{
 			var operationToken = Current as NonValueToken;
 			Next();

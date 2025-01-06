@@ -14,7 +14,7 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 	private readonly VariableManager _variableManager = variableManager;
 
 	private readonly HashSet<TokenType> _correctMathOperators =
-		[TokenType.Plus, TokenType.Minus, TokenType.Divide, TokenType.Multiply, TokenType.Pow];
+		[TokenType.Plus, TokenType.Minus, TokenType.Divide, TokenType.Multiply, TokenType.Pow, TokenType.Remainder];
 
 	private bool IsCorrectMathExpressionOperator(TokenType operatorType) =>
 		_correctMathOperators.Contains(operatorType);
@@ -90,6 +90,7 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 			TokenType.Multiply => left * right,
 			TokenType.Divide => left/right,
 			TokenType.Pow => Math.Pow(left, right),
+			TokenType.Remainder => left % right,
 			_ => throw new Exception("Incorrect math operator!")
 		};
 

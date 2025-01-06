@@ -8,6 +8,7 @@ public enum TokenType
 	Divide,
 	Multiply,
 	Pow,
+	Remainder,
 	OpenParenthesis,
 	CloseParenthesis,
 	EndOfLine,

@@ -13,7 +13,7 @@ internal sealed class Lexer(string code)
 
 	private int _position;
 
-	private readonly IReadOnlyDictionary<char, TokenType> _singleCharTokens = new Dictionary<char, TokenType>()
+	private readonly IReadOnlyDictionary<char, TokenType> _singleCharTokens = new Dictionary<char, TokenType>
 	{
 		{'+', TokenType.Plus},
 		{'-', TokenType.Minus},
@@ -25,7 +25,8 @@ internal sealed class Lexer(string code)
 		{',', TokenType.Comma},
 		{'=', TokenType.EqualSign},
 		{'!', TokenType.Factorial},
-		{'|', TokenType.ModulePipe}
+		{'|', TokenType.ModulePipe},
+		{'%', TokenType.Remainder}
 	};
 
 	private readonly HashSet<char> _separatorChars = [' ', '\t', '\r', '\0'];
@@ -118,7 +119,7 @@ internal sealed class Lexer(string code)
 		if (!IsSingleChar(Current))
 			return Option<NonValueToken>.None;
 
-		if (_singleCharTokens.TryGetValue(Current, out var singleCharTokenType))
+		if (!_singleCharTokens.TryGetValue(Current, out var singleCharTokenType))
 			throw new Exception("Unknown single char operator!");
 
 		var valueString = Current.ToString();
