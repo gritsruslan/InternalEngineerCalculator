@@ -27,7 +27,7 @@ internal sealed class AssignmentExpressionHandler(
 		var variableName = variableExpression.Name;
 
 		var variableValueResult = _evaluator.Evaluate(variableExpression.Expression);
-		if (variableValueResult.TryGetValue(out var variableValue))
+		if (!variableValueResult.TryGetValue(out var variableValue))
 			return variableValueResult;
 
 		_variableManager.InitializeOrUpdateVariable(variableName, variableValue);
