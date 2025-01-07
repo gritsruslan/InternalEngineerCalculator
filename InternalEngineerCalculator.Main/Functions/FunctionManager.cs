@@ -6,11 +6,11 @@ namespace InternalEngineerCalculator.Main.Functions;
 
 internal sealed class FunctionManager
 {
-	private readonly Dictionary<FunctionCallHeader, Function> _functions;
+	private readonly Dictionary<FunctionInfo, Function> _functions;
 
 	public FunctionManager()
 	{
-		_functions = new Dictionary<FunctionCallHeader, Function>();
+		_functions = new Dictionary<FunctionInfo, Function>();
 	}
 
 	public void InitializeDefaultFunctions()
@@ -49,7 +49,7 @@ internal sealed class FunctionManager
 		CreateNewBaseFunction("pow", 2, args => Math.Pow(args[0], args[1]));
 	}
 
-	public Result<Function> GetFunctionByHeader(FunctionCallHeader header)
+	public Result<Function> GetFunctionByHeader(FunctionInfo header)
 	{
 		if(_functions.TryGetValue(header, out var function))
 			return function;
@@ -57,11 +57,11 @@ internal sealed class FunctionManager
 		return ErrorBuilder.FunctionNotFound(header.FunctionName, header.CountOfArg);
 	}
 
-	public bool HasFunction(FunctionCallHeader header) => _functions.ContainsKey(header);
+	public bool HasFunction(FunctionInfo header) => _functions.ContainsKey(header);
 
 	public EmptyResult CreateNewCustomFunction(string name, IReadOnlyList<string> args, Expression functionExpression)
 	{
-		var header = new FunctionCallHeader(name, args.Count);
+		var header = new FunctionInfo(name, args.Count);
 
 		if (HasFunction(header))
 			return new Error(
@@ -79,7 +79,7 @@ internal sealed class FunctionManager
 
 	public EmptyResult DeleteFunction(string name, int countOfArgs)
 	{
-		var header = new FunctionCallHeader(name, countOfArgs);
+		var header = new FunctionInfo(name, countOfArgs);
 
 		if (!_functions.Remove(header))
 			return ErrorBuilder.FunctionNotFound(name, countOfArgs);
@@ -89,7 +89,7 @@ internal sealed class FunctionManager
 
 	private void CreateNewBaseFunction(string name, int countOfArgs, Func<ImmutableArray<double>, double> function)
 	{
-		_functions.Add(new FunctionCallHeader(name, countOfArgs),
+		_functions.Add(new FunctionInfo(name, countOfArgs),
 			new BaseFunction(name, countOfArgs, function));
 	}
 }

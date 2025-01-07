@@ -100,7 +100,7 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 	private Result<double> EvaluateFunction(FunctionCallExpression functionCallExpression, bool isInCustomFunction = false,
 		Dictionary<FunctionArgument, double>? functionArguments = null)
 	{
-		var header = new FunctionCallHeader(functionCallExpression.Name, functionCallExpression.CountOfArgs);
+		var header = new FunctionInfo(functionCallExpression.Name, functionCallExpression.CountOfArgs);
 
 		var functionGetResult = _functionManager.GetFunctionByHeader(header);
 		if (!functionGetResult.TryGetValue(out var function))
