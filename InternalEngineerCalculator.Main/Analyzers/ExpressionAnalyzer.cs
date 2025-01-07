@@ -6,14 +6,6 @@ using InternalEngineerCalculator.Main.Variables;
 
 namespace InternalEngineerCalculator.Main.Analyzers;
 
-internal sealed class AnalyzeResult(ImmutableArray<(ImmutableHashSet<FunctionInfo>, string)> undefinedVariables,
-	ImmutableArray<ImmutableHashSet<FunctionInfo>> undefinedFunctions)
-{
-	public ImmutableArray<(ImmutableHashSet<FunctionInfo>, string)> UndefinedVariables { get; } = undefinedVariables;
-
-	public ImmutableArray<ImmutableHashSet<FunctionInfo>> UndefinedFunctions { get; } = undefinedFunctions;
-}
-
 internal sealed class ExpressionAnalyzer(FunctionManager functionManager, VariableManager variableManager, Expression expression)
 {
 	private readonly Expression _expression = expression;
@@ -27,17 +19,17 @@ internal sealed class ExpressionAnalyzer(FunctionManager functionManager, Variab
 	private readonly List<List<FunctionInfo>> _undefinedFunctions = [];
 
 
-	public AnalyzeResult Analyze()
+	public AnalyzeExpressionResult Analyze()
 	{
 		Analyze(new Stack<FunctionInfo>(), _expression);
 
 		var undefinedVariables =
-			_undefinedVariables.Select(tuple => (tuple.Item1.ToImmutableHashSet(), tuple.Item2)).ToImmutableArray();
+			_undefinedVariables.Select(tuple => (tuple.Item1.ToImmutableArray(), tuple.Item2)).ToImmutableArray();
 
 		var undefinedFunctions =
-			_undefinedFunctions.Select(l => l.ToImmutableHashSet()).ToImmutableArray();
+			_undefinedFunctions.Select(l => l.ToImmutableArray()).ToImmutableArray();
 
-		return new AnalyzeResult(undefinedVariables, undefinedFunctions);
+		return new AnalyzeExpressionResult(undefinedVariables, undefinedFunctions);
 	}
 
 	private void Analyze(Stack<FunctionInfo> functionCallStack, Expression currentExpression)
