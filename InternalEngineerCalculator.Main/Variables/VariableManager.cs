@@ -14,6 +14,8 @@ internal sealed class VariableManager
 		_variablesContainer.Add("tau", new Variable("e", Math.Tau, true));
 	}
 
+	public bool HasVariable(string name) => _variablesContainer.ContainsKey(name);
+
 	public EmptyResult InitializeOrUpdateVariable(string name, double value)
 	{
 		if (_variablesContainer.TryGetValue(name, out var variable) && variable.IsConstant)
