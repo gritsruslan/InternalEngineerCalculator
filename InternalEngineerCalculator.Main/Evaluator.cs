@@ -7,6 +7,7 @@ using InternalEngineerCalculator.Main.Variables;
 
 namespace InternalEngineerCalculator.Main;
 
+
 internal sealed class Evaluator(FunctionManager functionManager, VariableManager variableManager)
 {
 	private readonly FunctionManager _functionManager = functionManager;
