@@ -5,7 +5,7 @@ using InternalEngineerCalculator.Main.Tokens;
 
 namespace InternalEngineerCalculator.Main;
 
-internal sealed class Parser2(ImmutableArray<Token> tokens)
+internal sealed class Parser(ImmutableArray<Token> tokens)
 {
 	private readonly ImmutableArray<Token> _tokens = tokens;
 
@@ -112,6 +112,20 @@ internal sealed class Parser2(ImmutableArray<Token> tokens)
 		return new FunctionAssignmentExpression(functionName, [..args], functionExpression);
 	}
 
+	private BinaryOperationType GetBinaryOperationType(NonValueToken token)
+	{
+		return token.Type switch
+		{
+			TokenType.Plus => BinaryOperationType.Addition,
+			TokenType.Minus => BinaryOperationType.Subtraction,
+			TokenType.Divide => BinaryOperationType.Division,
+			TokenType.Multiply => BinaryOperationType.Multiplication,
+			TokenType.Pow => BinaryOperationType.Power,
+			TokenType.Remainder => BinaryOperationType.Remainder,
+			_ => throw new ArgumentException("Unknown operation token!")
+		};
+	}
+
 	private Result<Expression> ParseExpression()
 	{
 		var leftResult = ParseTerm();
@@ -127,7 +141,8 @@ internal sealed class Parser2(ImmutableArray<Token> tokens)
 			if (!rightResult.TryGetValue(out var right))
 				return rightResult;
 
-			left = new BinaryExpression(left, operationToken!, right);
+			var type = GetBinaryOperationType(operationToken!);
+			left = new BinaryExpression(left, type, right);
 		}
 
 		return left;
@@ -149,8 +164,8 @@ internal sealed class Parser2(ImmutableArray<Token> tokens)
 			if (!rightResult.TryGetValue(out var right))
 				return rightResult;
 
-
-			left = new BinaryExpression(left, operationToken!, right);
+			var type = GetBinaryOperationType(operationToken!);
+			left = new BinaryExpression(left, type, right);
 		}
 
 		return left;

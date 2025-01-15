@@ -51,7 +51,7 @@ internal static class ExpressionExtensions
 		Console.WriteLine(offset + "Binary Expression");
 		offset += "  ";
 		expression.Left.PrettyPrint(offset);
-		Console.WriteLine(offset + $"Operation {expression.Operation.ValueString}");
+		Console.WriteLine(offset + $"Operation {expression.OperationType}");
 		expression.Right.PrettyPrint(offset);
 	}
 
