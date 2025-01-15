@@ -1,6 +1,6 @@
 namespace InternalEngineerCalculator.Main.Expressions;
 
-public enum UnaryExpressionType
+internal enum UnaryExpressionType
 {
 	Minus,
 	Factorial,

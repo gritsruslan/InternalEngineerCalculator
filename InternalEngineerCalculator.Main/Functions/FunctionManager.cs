@@ -49,7 +49,7 @@ internal sealed class FunctionManager
 		CreateNewBaseFunction("pow", 2, args => Math.Pow(args[0], args[1]));
 	}
 
-	public Result<Function> GetFunctionByHeader(FunctionInfo header)
+	public Result<Function> GetFunction(FunctionInfo header)
 	{
 		if(_functions.TryGetValue(header, out var function))
 			return function;

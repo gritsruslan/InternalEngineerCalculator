@@ -1,12 +1,11 @@
 using System.Collections.Immutable;
 using InternalEngineerCalculator.Main.Common;
 using InternalEngineerCalculator.Main.Expressions;
+using InternalEngineerCalculator.Main.Extensions;
 using InternalEngineerCalculator.Main.Functions;
-using InternalEngineerCalculator.Main.Tokens;
 using InternalEngineerCalculator.Main.Variables;
 
 namespace InternalEngineerCalculator.Main;
-
 
 internal sealed class Evaluator(FunctionManager functionManager, VariableManager variableManager)
 {
@@ -14,135 +13,124 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 
 	private readonly VariableManager _variableManager = variableManager;
 
-	private readonly HashSet<TokenType> _correctMathOperators =
-		[TokenType.Plus, TokenType.Minus, TokenType.Divide, TokenType.Multiply, TokenType.Pow, TokenType.Remainder];
+	// Stack of arguments of called custom functions
+	private readonly Stack<Dictionary<FunctionArgument, double>> _customFuncArgumentsStack = [];
 
-	private bool IsCorrectMathExpressionOperator(TokenType operatorType) =>
-		_correctMathOperators.Contains(operatorType);
+	private bool IsInCustomFunction => _customFuncArgumentsStack.IsEmpty();
 
-	public Result<double> Evaluate(Expression expression, bool isInCustomFunction = false,
-		Dictionary<FunctionArgument, double>? functionArguments = null)
+	public Result<double> Evaluate(Expression expression)
 	{
-		if (expression is NumberExpression ne)
-			return ne.Token.Value;
-
-		if (expression is VariableExpression ve)
+		return expression switch
 		{
-			if (isInCustomFunction)
-			{
-				var maybeFuncArgument = new FunctionArgument(ve.Name);
-				if (functionArguments!.TryGetValue(maybeFuncArgument, out var value))
-					return value;
-			}
+			NumberExpression ne => ne.Value,
+			UnaryExpression ue => EvaluateUnaryExpression(ue),
+			BinaryExpression be => EvaluateBinaryExpression(be),
+			VariableExpression ve => EvaluateVariableExpression(ve),
+			FunctionCallExpression fe => EvaluateFunctionCallExpression(fe),
+			_ => throw new ArgumentException("Unknown expression to evaluate!")
+		};
+	}
 
-			return _variableManager.GetVariableValue(ve.Name);
-		}
+	private Result<double> EvaluateUnaryExpression(UnaryExpression ue)
+	{
+		var exprValueResult = Evaluate(ue.Expression);
 
-		if (expression is UnaryExpression ue)
+		if(!exprValueResult.TryGetValue(out var exprValue))
+			return exprValueResult;
+
+		if (ue.Type is UnaryExpressionType.Factorial)
+			return RMath.Factorial(exprValue);
+
+		return ue.Type switch
 		{
-			var exprResult = Evaluate(ue.Expression, isInCustomFunction, functionArguments);
-			if (!exprResult.TryGetValue(out var expr))
-				return exprResult;
+			UnaryExpressionType.Minus => -exprValue,
+			UnaryExpressionType.Module => Math.Abs(exprValue),
+			_ => throw new ArgumentException("Unknown unary expression operator!")
+		};
+	}
 
-			if (ue.Type == UnaryExpressionType.Minus)
-				expr *= -1;
-			else if (ue.Type == UnaryExpressionType.Factorial)
-			{
-				var factorialResult = RMath.Factorial(expr);
-				if (factorialResult.IsSuccess)
-					expr = factorialResult.Value;
-				else
-					return factorialResult;
-			}
-			else if (ue.Type == UnaryExpressionType.Module)
-			{
-				expr = Math.Abs(expr);
-			}
-
-			// Other unary operators
-			return expr;
-		}
-
-		if (expression is FunctionCallExpression fce)
-			return EvaluateFunction(fce, isInCustomFunction, functionArguments);
-
-		var binExpression = expression as BinaryExpression;
-
-		var leftResult = Evaluate(binExpression!.Left, isInCustomFunction, functionArguments);
+	private Result<double> EvaluateBinaryExpression(BinaryExpression be)
+	{
+		var leftResult = Evaluate(be.Left);
 		if (!leftResult.TryGetValue(out var left))
 			return leftResult;
 
-		var operation = binExpression.Operation;
-
-		var rightResult = Evaluate(binExpression.Right, isInCustomFunction, functionArguments);
+		var rightResult = Evaluate(be.Right);
 		if (!rightResult.TryGetValue(out var right))
 			return rightResult;
 
-		if (operation.Type == TokenType.Divide && right == 0)
-			return new Error("Divide by zero is not allowed!");
+		if (be.OperationType is BinaryOperationType.Division or BinaryOperationType.Remainder && right == 0)
+			return new Error("Divizion by zero is not allowed!"); //TODO
 
-		if (!IsCorrectMathExpressionOperator(operation.Type))
-			return new Error("Incorrect math operator!");
-
-		double result = operation.Type switch
+		var result = be.OperationType switch
 		{
-			TokenType.Plus => left + right,
-			TokenType.Minus => left - right,
-			TokenType.Multiply => left * right,
-			TokenType.Divide => left/right,
-			TokenType.Pow => Math.Pow(left, right),
-			TokenType.Remainder => left % right,
-			_ => throw new Exception("Incorrect math operator!")
+			BinaryOperationType.Addition => left + right,
+			BinaryOperationType.Subtraction => left - right,
+			BinaryOperationType.Multiplication => left / right,
+			BinaryOperationType.Division => left / right,
+			BinaryOperationType.Remainder => left % right,
+			BinaryOperationType.Power => Math.Pow(left, right),
+			_ => throw new ArgumentException("Unknown binary operation!")
 		};
 
 		return result;
 	}
 
-	private Result<double> EvaluateFunction(FunctionCallExpression functionCallExpression, bool isInCustomFunction = false,
-		Dictionary<FunctionArgument, double>? functionArguments = null)
+	private Result<double> EvaluateVariableExpression(VariableExpression ve)
 	{
-		var header = new FunctionInfo(functionCallExpression.Name, functionCallExpression.CountOfArgs);
-
-		var functionGetResult = _functionManager.GetFunctionByHeader(header);
-		if (!functionGetResult.TryGetValue(out var function))
-			return functionGetResult.Error;
-
-		double[] evaluatedArgValues = new double[functionCallExpression.CountOfArgs];
-
-		for (int i = 0; i < functionCallExpression.Arguments.Length; i++)
+		if (IsInCustomFunction)
 		{
-			var argExpression = functionCallExpression.Arguments[i];
-
-			var valueResult = Evaluate(argExpression, isInCustomFunction, functionArguments);
-			if (!valueResult.TryGetValue(out var value))
-				return valueResult;
-
-			evaluatedArgValues[i] = value;
+			var currentArgs = _customFuncArgumentsStack.Peek();
+			if (currentArgs.TryGetValue(new FunctionArgument(ve.Name), out var arg))
+				return arg;
 		}
 
-		var immutableArrayEvaluatedArgs = evaluatedArgValues.ToImmutableArray();
-
-		if (function is BaseFunction baseFunction)
-			return EvaluateBaseFunction(baseFunction, immutableArrayEvaluatedArgs);
-
-		if (function is CustomFunction customFunction)
-			return EvaluateCustomFunction(customFunction, immutableArrayEvaluatedArgs);
-
-		throw new Exception("Incorrect function call!");
+		return _variableManager.GetVariableValue(ve.Name);
 	}
 
-	private double EvaluateBaseFunction(BaseFunction baseFunction, ImmutableArray<double> args)
-		=> baseFunction.Function.Invoke(args);
-
-	private Result<double> EvaluateCustomFunction(CustomFunction customFunction, ImmutableArray<double> args)
+	private Result<double> EvaluateFunctionCallExpression(FunctionCallExpression fe)
 	{
-		var argumentsDictionary = new Dictionary<FunctionArgument, double>();
+		//GetFunction
+		var funcResult = _functionManager.GetFunction(new FunctionInfo(fe.Name, fe.CountOfArgs));
+		if (!funcResult.TryGetValue(out var function))
+			return funcResult.Error;
+
+		//Evaluate Arguments
+		var argsArray = new List<double>(fe.CountOfArgs);
+		foreach (var argExpr in fe.Arguments)
+		{
+			var argValueResult = Evaluate(argExpr);
+			if (!argValueResult.TryGetValue(out var value))
+				return argValueResult;
+
+			argsArray.Add(value);
+		}
+
+		var argsImmut = argsArray.ToImmutableArray();
+
+		if (function is BaseFunction bf)
+			return EvaluateBaseFunction(bf, argsImmut);
+
+		if (function is CustomFunction cf)
+			return EvaluateCustomFunction(cf, argsImmut);
+
+		throw new Exception("Unknown function type!");
+	}
+
+	private Result<double> EvaluateBaseFunction(BaseFunction bf, ImmutableArray<double> argValues) =>
+		bf.Function.Invoke(argValues);
+
+	private Result<double> EvaluateCustomFunction(CustomFunction cf, ImmutableArray<double> args)
+	{
+		var argsDict = new Dictionary<FunctionArgument, double>(args.Length);
 
 		for (int i = 0; i < args.Length; i++)
-			argumentsDictionary.Add(customFunction.Arguments[i], args[i]);
+			argsDict.Add(cf.Arguments[i], args[i]);
 
-		var expression = customFunction.FunctionExpression;
+		_customFuncArgumentsStack.Push(argsDict);
+		var evalResult = Evaluate(cf.Expression);
+		_customFuncArgumentsStack.Pop();
 
-		return Evaluate(expression, true, argumentsDictionary);
+		return evalResult;
 	}
 }

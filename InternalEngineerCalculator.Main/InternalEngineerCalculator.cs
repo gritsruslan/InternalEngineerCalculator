@@ -81,7 +81,7 @@ internal sealed class InternalEngineerCalculator
 				if (_environmentVariables["ShowTokens"])
 					tokens.PrintTokens();
 
-				if (Parser2.IsAssignmentExpression(tokens))
+				if (Parser.IsAssignmentExpression(tokens))
 					HandleAssignmentExpression(tokens);
 				else
 					HandleResultExpression(tokens);
@@ -95,7 +95,7 @@ internal sealed class InternalEngineerCalculator
 
 	private void HandleAssignmentExpression(ImmutableArray<Token> tokens)
 	{
-		var parser = new Parser2(tokens);
+		var parser = new Parser(tokens);
 
 		var assignmentExpressionResult = parser.ParseAssignmentExpression();
 
@@ -136,7 +136,7 @@ internal sealed class InternalEngineerCalculator
 
 	private void HandleResultExpression(ImmutableArray<Token> tokens)
 	{
-		var parser = new Parser2(tokens);
+		var parser = new Parser(tokens);
 
 		var expressionResult = parser.Parse();
 		if (!expressionResult.TryGetValue(out var expression))
