@@ -32,4 +32,9 @@ internal sealed class VariableManager
 
 		return variable.Value;
 	}
+
+	public bool DeleteVariable(string name)
+	{
+		return _variablesContainer.Remove(name);
+	}
 }

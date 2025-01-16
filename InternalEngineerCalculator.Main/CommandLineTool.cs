@@ -3,21 +3,20 @@ using InternalEngineerCalculator.Main.Variables;
 
 namespace InternalEngineerCalculator.Main;
 
-internal sealed class CommandLineTool
+internal sealed class CommandLineTool(
+	Dictionary<FunctionInfo, string> functionAssignmentStrings,
+	FunctionManager functionManager,
+	VariableManager variableManager,
+	Dictionary<string, bool> environmentVariables)
 {
-	// for future
-	private FunctionManager _functionManager;
+	private FunctionManager _functionManager = functionManager;
 
-	private VariableManager _variableManager;
+	private VariableManager _variableManager = variableManager;
 
-	private Dictionary<string, bool> _environmentVariables;
+	private Dictionary<string, bool> _environmentVariables = environmentVariables;
 
-	public CommandLineTool(FunctionManager functionManager, VariableManager variableManager, Dictionary<string, bool>  environmentVariables)
-	{
-		_functionManager = functionManager;
-		_variableManager = variableManager;
-		_environmentVariables = environmentVariables;
-	}
+	private Dictionary<FunctionInfo, string> _functionAssignmentStrings = functionAssignmentStrings;
+
 
 	public void ProcessCommand(string command)
 	{
@@ -41,6 +40,12 @@ internal sealed class CommandLineTool
 				ShowBasicFunctions(args); break;
 			case "#showvariables":
 				ShowVariables(args); break;
+			case "#deletevariable":
+				DeleteVariable(args); break;
+			case "showcustomfunctions":
+				ShowCustomFunctions(args); break;
+			case "deletecustomfunction" :
+				DeleteCustomFunction(args); break;
 			default:
 				Console.WriteLine($"Unknown command \"{commandName}\"");
 				break;
@@ -56,23 +61,28 @@ internal sealed class CommandLineTool
 		}
 
 		string helpString =
-			"""
 
+			"""
 			InternalEngineerCalculator by @gritsruslan!
 
-			Available math operators : + - * / ^
+			Available math operators : + - * / ^ % !
+
 			Examples:
 			12 + 3 * (2 - 1)
 			2 ^ 3 + 52
 			1/20 + 1
+			-3! + 2
 
 			Available commands :
 			#exit - exit calculator
 			#clear - clear console output
 			#help - output short calculator guide
-			#showexpressiontree - enable showing expression trees
-			#unshowexpressiontree - disable showing expression trees
-
+			#ShowExpressionTree <true | false> - enable or disable showing expression trees
+			#ShowBasicFunctions
+			#ShowCustomFunctions
+			#DeleteCustomFunction <name> <countOfArgs>
+			#ShowVariables
+			#DeleteVariable <name>
 			""";
 
 		Console.WriteLine(helpString);
@@ -181,12 +191,78 @@ internal sealed class CommandLineTool
 
 	private void PrintIfIncorrectCountOfArguments(string command,int mustHaveArgs, int countOfArgs)
 	{
-		Console.ForegroundColor = ConsoleColor.Yellow;
 		var argsString = mustHaveArgs == 1 ? "arguments" : "argument";
 		var transmised = countOfArgs == 1 ? "was" : "were";
-		Console.WriteLine(
+		PrintError(
 			$"{command} command must have {mustHaveArgs} {argsString}, but {countOfArgs} {transmised} transmised");
+	}
+
+	private void PrintError(string message)
+	{
+		Console.ForegroundColor = ConsoleColor.Yellow;
+		Console.WriteLine(message);
 		Console.ForegroundColor = ConsoleColor.Gray;
+
+	}
+
+	private void ShowCustomFunctions(string[] args)
+	{
+		if (args.Length != 0)
+		{
+			PrintIfIncorrectCountOfArguments("ShowCustomFunctions", 0, args.Length);
+			return;
+		}
+
+		Console.WriteLine("=========================================");
+		Console.WriteLine("Custom Functions : ");
+
+		foreach (var functions in _functionAssignmentStrings)
+			Console.WriteLine(functions);
+
+		Console.WriteLine("=========================================");
+	}
+
+	private void DeleteCustomFunction(string[] args)
+	{
+		if (args.Length != 2)
+		{
+			PrintIfIncorrectCountOfArguments("DeleteFunction", 2, args.Length);
+			return;
+		}
+
+		var name = args[0];
+		if (!int.TryParse(args[1], out var countOfArgs))
+		{
+			PrintError($"The \"{args[1]}\" is not correct argument!");
+			return;
+		}
+
+		var info = new FunctionInfo(name, countOfArgs);
+		var deleteResult = _functionManager.DeleteFunction(info);
+
+		if(deleteResult.IsFailure)
+			PrintError(deleteResult.Error.Message);
+		else
+		{
+			_functionAssignmentStrings.Remove(info);
+			Console.WriteLine($"Function \"{name}\" with \"{countOfArgs}\" was successfully deleted!");
+		}
+	}
+
+	private void DeleteVariable(string[] args)
+	{
+		if (args.Length != 1)
+		{
+			PrintIfIncorrectCountOfArguments("DeleteVariable", 1, args.Length);
+			return;
+		}
+
+		var isDeleted = _variableManager.DeleteVariable(args[0]);
+
+		if(isDeleted)
+			Console.WriteLine($"Variable \"{args[0]}\" was successfully deleted!");
+		else
+			PrintError($"There are no variable with name \"{args[0]}\"");
 	}
 
 	private void ShowVariables(string[] args)
@@ -199,12 +275,10 @@ internal sealed class CommandLineTool
 
 		var variables = _variableManager.GetVariables();
 
-		Console.WriteLine("Variables");
-
+		Console.WriteLine("=========================================");
+		Console.WriteLine("Variables : ");
 		foreach (var (name,value) in variables)
-			Console.WriteLine($"{name} : {value}");
-
-		Console.WriteLine();
+			Console.WriteLine($"{name} = {value}");
+		Console.WriteLine("=========================================");
 	}
-
 }

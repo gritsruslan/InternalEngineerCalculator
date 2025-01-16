@@ -14,9 +14,11 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 	private readonly VariableManager _variableManager = variableManager;
 
 	// Stack of arguments of called custom functions
-	private readonly Stack<Dictionary<FunctionArgument, double>> _customFuncArgumentsStack = [];
+	private readonly Stack<FunctionEvaluatingInfo> _functionCallStack = [];
+	private ImmutableArray<FunctionInfo> FunctionCallArray => _functionCallStack
+		.Select(fi => new FunctionInfo(fi.Name, fi.CountOfArgs)).ToImmutableArray();
 
-	private bool IsInCustomFunction => _customFuncArgumentsStack.IsEmpty();
+	private bool IsInCustomFunction => !_functionCallStack.IsEmpty();
 
 	public Result<double> Evaluate(Expression expression)
 	{
@@ -38,11 +40,9 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 		if(!exprValueResult.TryGetValue(out var exprValue))
 			return exprValueResult;
 
-		if (ue.Type is UnaryExpressionType.Factorial)
-			return RMath.Factorial(exprValue);
-
 		return ue.Type switch
 		{
+			UnaryExpressionType.Factorial => RMath.Factorial(exprValue),
 			UnaryExpressionType.Minus => -exprValue,
 			UnaryExpressionType.Module => Math.Abs(exprValue),
 			_ => throw new ArgumentException("Unknown unary expression operator!")
@@ -60,7 +60,7 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 			return rightResult;
 
 		if (be.OperationType is BinaryOperationType.Division or BinaryOperationType.Remainder && right == 0)
-			return new Error("Divizion by zero is not allowed!"); //TODO
+			return new Error("Divizion by zero is not allowed!");
 
 		var result = be.OperationType switch
 		{
@@ -80,12 +80,17 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 	{
 		if (IsInCustomFunction)
 		{
-			var currentArgs = _customFuncArgumentsStack.Peek();
+			var currentArgs = _functionCallStack.Peek().ArgsDictionary;
 			if (currentArgs.TryGetValue(new FunctionArgument(ve.Name), out var arg))
 				return arg;
 		}
 
-		return _variableManager.GetVariableValue(ve.Name);
+		var variableResult = _variableManager.GetVariableValue(ve.Name);
+
+		if (variableResult.IsFailure)
+			return ErrorBuilder.UndefinedVariable(ve.Name, FunctionCallArray);
+
+		return variableResult.Value;
 	}
 
 	private Result<double> EvaluateFunctionCallExpression(FunctionCallExpression fe)
@@ -93,7 +98,7 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 		//GetFunction
 		var funcResult = _functionManager.GetFunction(new FunctionInfo(fe.Name, fe.CountOfArgs));
 		if (!funcResult.TryGetValue(out var function))
-			return funcResult.Error;
+			return ErrorBuilder.UndefinedFunction(fe.Name, fe.CountOfArgs, FunctionCallArray);
 
 		//Evaluate Arguments
 		var argsArray = new List<double>(fe.CountOfArgs);
@@ -117,7 +122,7 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 		throw new Exception("Unknown function type!");
 	}
 
-	private Result<double> EvaluateBaseFunction(BaseFunction bf, ImmutableArray<double> argValues) =>
+	private double EvaluateBaseFunction(BaseFunction bf, ImmutableArray<double> argValues) =>
 		bf.Function.Invoke(argValues);
 
 	private Result<double> EvaluateCustomFunction(CustomFunction cf, ImmutableArray<double> args)
@@ -127,9 +132,9 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 		for (int i = 0; i < args.Length; i++)
 			argsDict.Add(cf.Arguments[i], args[i]);
 
-		_customFuncArgumentsStack.Push(argsDict);
+		_functionCallStack.Push(new FunctionEvaluatingInfo(cf.Name, args.Length, argsDict));
 		var evalResult = Evaluate(cf.Expression);
-		_customFuncArgumentsStack.Pop();
+		_functionCallStack.Pop();
 
 		return evalResult;
 	}

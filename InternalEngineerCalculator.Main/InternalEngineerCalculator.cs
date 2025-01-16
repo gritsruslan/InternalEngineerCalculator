@@ -12,6 +12,8 @@ internal sealed class InternalEngineerCalculator
 {
 	private const ConsoleColor DefaultColor = ConsoleColor.Gray;
 
+	private readonly Logger _logger;
+
 	private readonly FunctionManager _functionManager;
 
 	private readonly VariableManager _variableManager;
@@ -22,8 +24,7 @@ internal sealed class InternalEngineerCalculator
 
 	private readonly CommandLineTool _commandLineTool;
 
-	private readonly bool _isDebug;
-
+	private readonly Dictionary<FunctionInfo, string> _functionAssignmentStrings = [];
 
 	private readonly Dictionary<string, bool> _environmentVariables = new()
 	{
@@ -31,35 +32,33 @@ internal sealed class InternalEngineerCalculator
 		{ "ShowExpressionTree", false },
 	};
 
-	public InternalEngineerCalculator(bool isDebug)
+	public InternalEngineerCalculator()
 	{
-		_isDebug = isDebug;
-
+		_logger = new Logger();
 		_functionManager = new FunctionManager();
 		_functionManager.InitializeDefaultFunctions();
-
 		_variableManager = new VariableManager();
 		_variableManager.InitializeBasicVariables();
-
 		_evaluator = new Evaluator(_functionManager, _variableManager);
-
 		_assignmentExpressionHandler = new AssignmentExpressionHandler(_evaluator, _variableManager, _functionManager);
-
-		_commandLineTool = new(_functionManager, _variableManager, _environmentVariables);
+		_commandLineTool = new(
+			_functionAssignmentStrings,
+			_functionManager, _variableManager,
+			_environmentVariables);
 	}
-
 	public void Start()
 	{
-		var debugString = _isDebug ? $" : Debug Mode" : string.Empty;
-		Console.WriteLine($"InternalEngineerCalculator by @gritsruslan!{debugString}");
+#if DEBUG
+		Console.WriteLine("InternalEngineerCalculator by @gritsruslan! : Debug Mode");
+#else
+		Console.WriteLine("InternalEngineerCalculator by @gritsruslan!");
+#endif
 		while (true)
 		{
 			try
 			{
 				Console.Write("> ");
-
 				var input = Console.ReadLine();
-
 				if (string.IsNullOrWhiteSpace(input))
 					continue;
 
@@ -82,18 +81,19 @@ internal sealed class InternalEngineerCalculator
 					tokens.PrintTokens();
 
 				if (Parser.IsAssignmentExpression(tokens))
-					HandleAssignmentExpression(tokens);
+					HandleAssignmentExpression(input, tokens);
 				else
 					HandleResultExpression(tokens);
 			}
 			catch (Exception e)
 			{
+				_logger.LogException(e);
 				PrintException(e);
 			}
 		}
 	}
 
-	private void HandleAssignmentExpression(ImmutableArray<Token> tokens)
+	private void HandleAssignmentExpression(string assignmentString, ImmutableArray<Token> tokens)
 	{
 		var parser = new Parser(tokens);
 
@@ -130,6 +130,7 @@ internal sealed class InternalEngineerCalculator
 				return;
 			}
 
+			_functionAssignmentStrings.Add(new FunctionInfo(fe.Name, fe.Args.Length), assignmentString);
 			Console.WriteLine($"Function \"{fe.Name}\" with {fe.Args.Length} needed arguments was successfully declared!");
 		}
 	}
@@ -157,30 +158,29 @@ internal sealed class InternalEngineerCalculator
 		}
 
 		if (double.IsNaN(resultValue))
-		{
-			PrintError(new Error("The result cannot be calculated because its an imaginary number!"));
-			return;
-		}
-
-		Console.WriteLine($"Result : {resultValue}");
+			PrintError("The result cannot be calculated because its an imaginary number!");
+		else if (double.IsSubnormal(resultValue))
+			PrintError("The result cannot be calculated because its a subnormal value!");
+		else if (double.IsInfinity(resultValue))
+			PrintError("The result cannot be calculated because its infinity!");
+		else
+			Console.WriteLine($"Result : {resultValue}");
 	}
 
 	private void PrintException(Exception exception)
 	{
-		if (_isDebug)
-		{
-			Console.WriteLine("Debug error : ");
-			Console.WriteLine(exception);
-		}
-		else
-		{
-			Console.ForegroundColor = ConsoleColor.DarkRed;
-			Console.WriteLine("An unhandled error occurred while the program was running. Please contact @gritsruslan!");
-			Console.WriteLine();
-			Console.ForegroundColor = DefaultColor;
-		}
+#if DEBUG
+		Console.WriteLine("Debug error : ");
+		Console.WriteLine(exception);
+#else
+		Console.ForegroundColor = ConsoleColor.DarkRed;
+		Console.WriteLine("An unhandled error occurred while the program was running. Please contact @gritsruslan!");
+		Console.WriteLine();
+		Console.ForegroundColor = DefaultColor;
+#endif
 	}
 
+	private void PrintError(string message) => PrintError(new Error(message));
 	private void PrintError(Error error)
 	{
 		Console.ForegroundColor = ConsoleColor.Yellow;

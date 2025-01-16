@@ -49,15 +49,29 @@ internal sealed class FunctionManager
 		CreateNewBaseFunction("pow", 2, args => Math.Pow(args[0], args[1]));
 	}
 
-	public Result<Function> GetFunction(FunctionInfo header)
+	public bool HasFunction(FunctionInfo header) => _functions.ContainsKey(header);
+
+	public Result<Function> GetFunction(FunctionInfo info)
 	{
-		if(_functions.TryGetValue(header, out var function))
+		if(_functions.TryGetValue(info, out var function))
 			return function;
 
-		return ErrorBuilder.FunctionNotFound(header.FunctionName, header.CountOfArg);
+		return ErrorBuilder.FunctionNotFound(info.Name, info.CountOfArg);
 	}
 
-	public bool HasFunction(FunctionInfo header) => _functions.ContainsKey(header);
+	public EmptyResult DeleteFunction(FunctionInfo info)
+	{
+		var functionResult = GetFunction(info);
+		if (!functionResult.TryGetValue(out var function))
+			return ErrorBuilder.FunctionNotFound(info.Name, info.CountOfArg);
+
+		if (function.IsBaseFunction)
+			return new Error("Cannot delete base function!");
+
+		_functions.Remove(info);
+
+		return EmptyResult.Success();
+	}
 
 	public EmptyResult CreateNewCustomFunction(string name, IReadOnlyList<string> args, Expression functionExpression)
 	{
@@ -73,16 +87,6 @@ internal sealed class FunctionManager
 		var function = new CustomFunction(name, [..convArgs], functionExpression);
 
 		_functions.Add(header, function);
-
-		return EmptyResult.Success();
-	}
-
-	public EmptyResult DeleteFunction(string name, int countOfArgs)
-	{
-		var header = new FunctionInfo(name, countOfArgs);
-
-		if (!_functions.Remove(header))
-			return ErrorBuilder.FunctionNotFound(name, countOfArgs);
 
 		return EmptyResult.Success();
 	}
