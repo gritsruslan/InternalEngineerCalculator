@@ -1,6 +1,6 @@
 namespace InternalEngineerCalculator.Main.Expressions;
 
-internal abstract class AssignmentExpression : Expression
+public abstract class AssignmentExpression : Expression
 {
 	public abstract Expression Expression { get; }
 

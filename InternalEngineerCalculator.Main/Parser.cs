@@ -5,7 +5,7 @@ using InternalEngineerCalculator.Main.Tokens;
 
 namespace InternalEngineerCalculator.Main;
 
-internal sealed class Parser(ImmutableArray<Token> tokens)
+public sealed class Parser(ImmutableArray<Token> tokens)
 {
 	private readonly ImmutableArray<Token> _tokens = tokens;
 
@@ -151,11 +151,33 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 
 	private Result<Expression> ParseTerm()
 	{
-		var leftResult = ParseFactorial();
+		var leftResult = ParsePower();
 		if (!leftResult.TryGetValue(out var left))
 			return leftResult;
 
 		while (Current.Type is TokenType.Divide or TokenType.Multiply or TokenType.Remainder)
+		{
+			var operationToken = Current as NonValueToken;
+			Next();
+
+			var rightResult = ParsePower();
+			if (!rightResult.TryGetValue(out var right))
+				return rightResult;
+
+			var type = GetBinaryOperationType(operationToken!);
+			left = new BinaryExpression(left, type, right);
+		}
+
+		return left;
+	}
+
+	private Result<Expression> ParsePower()
+	{
+		var leftResult = ParseFactorial();
+		if (!leftResult.TryGetValue(out var left))
+			return leftResult;
+
+		while (Current.Type is TokenType.Pow)
 		{
 			var operationToken = Current as NonValueToken;
 			Next();
@@ -170,14 +192,13 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 
 		return left;
 	}
-
 	private Result<Expression> ParseFactorial()
 	{
 		var expResult = ParseParenthesisExpression();
 		if (!expResult.TryGetValue(out var expression))
 			return expResult;
 
-		while (Current.Type == TokenType.Factorial)
+		while (Current.Type is TokenType.Factorial)
 		{
 			Next();
 			expression = new UnaryExpression(expression, UnaryExpressionType.Factorial);
@@ -211,7 +232,7 @@ internal sealed class Parser(ImmutableArray<Token> tokens)
 		if (Current.Type == TokenType.Minus)
 		{
 			Next();
-			var inUnaryExpressionResult = ParseExpression();
+			var inUnaryExpressionResult = ParseFactorial();
 			if (!inUnaryExpressionResult.TryGetValue(out var inUnaryExpression))
 				return inUnaryExpressionResult;
 			return new UnaryExpression(inUnaryExpression, UnaryExpressionType.Minus);

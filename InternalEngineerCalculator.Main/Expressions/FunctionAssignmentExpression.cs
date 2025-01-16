@@ -3,7 +3,7 @@ using InternalEngineerCalculator.Main.Tokens;
 
 namespace InternalEngineerCalculator.Main.Expressions;
 
-internal sealed class FunctionAssignmentExpression(string name, ImmutableArray<string> args, Expression expression)
+public sealed class FunctionAssignmentExpression(string name, ImmutableArray<string> args, Expression expression)
 	: AssignmentExpression
 {
 	public ImmutableArray<string> Args { get; } = args;

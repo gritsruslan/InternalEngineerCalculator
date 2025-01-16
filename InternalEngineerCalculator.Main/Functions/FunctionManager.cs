@@ -4,7 +4,7 @@ using InternalEngineerCalculator.Main.Expressions;
 
 namespace InternalEngineerCalculator.Main.Functions;
 
-internal sealed class FunctionManager
+public sealed class FunctionManager
 {
 	private readonly Dictionary<FunctionInfo, Function> _functions;
 
@@ -34,9 +34,9 @@ internal sealed class FunctionManager
 		//Round
 		CreateNewBaseFunction("round", 1, args => Math.Round(args[0]));
 		//Rad
-		CreateNewBaseFunction("rad", 1, args => RMath.RadiansToDegree(args[0]));
+		CreateNewBaseFunction("rad", 1, args => RMath.DegreeToRadians(args[0]));
 		//Deg
-		CreateNewBaseFunction("deg", 1, args => RMath.DegreeToRadians(args[1]));
+		CreateNewBaseFunction("deg", 1, args => RMath.RadiansToDegree(args[0]));
 		//Log10
 		CreateNewBaseFunction("log10", 1, args => Math.Log10(args[0]));
 		//Log

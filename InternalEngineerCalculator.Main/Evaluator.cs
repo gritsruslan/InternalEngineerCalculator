@@ -7,7 +7,7 @@ using InternalEngineerCalculator.Main.Variables;
 
 namespace InternalEngineerCalculator.Main;
 
-internal sealed class Evaluator(FunctionManager functionManager, VariableManager variableManager)
+public sealed class Evaluator(FunctionManager functionManager, VariableManager variableManager)
 {
 	private readonly FunctionManager _functionManager = functionManager;
 
@@ -66,7 +66,7 @@ internal sealed class Evaluator(FunctionManager functionManager, VariableManager
 		{
 			BinaryOperationType.Addition => left + right,
 			BinaryOperationType.Subtraction => left - right,
-			BinaryOperationType.Multiplication => left / right,
+			BinaryOperationType.Multiplication => left * right,
 			BinaryOperationType.Division => left / right,
 			BinaryOperationType.Remainder => left % right,
 			BinaryOperationType.Power => Math.Pow(left, right),

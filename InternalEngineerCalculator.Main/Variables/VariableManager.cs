@@ -2,7 +2,7 @@ using InternalEngineerCalculator.Main.Common;
 
 namespace InternalEngineerCalculator.Main.Variables;
 
-internal sealed class VariableManager
+public sealed class VariableManager
 {
 	private readonly Dictionary<string, Variable> _variablesContainer = [];
 	internal IReadOnlyDictionary<string, Variable> GetVariables() => _variablesContainer;
