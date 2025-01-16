@@ -12,11 +12,9 @@ internal sealed class InternalEngineerCalculator
 {
 	private const ConsoleColor DefaultColor = ConsoleColor.Gray;
 
-	private readonly Logger _logger;
+	private readonly Logger _logger = new();
 
-	private readonly FunctionManager _functionManager;
-
-	private readonly VariableManager _variableManager;
+	private readonly Lexer _lexer = new();
 
 	private readonly Evaluator _evaluator;
 
@@ -34,18 +32,17 @@ internal sealed class InternalEngineerCalculator
 
 	public InternalEngineerCalculator()
 	{
-		_logger = new Logger();
-		_functionManager = new FunctionManager();
-		_functionManager.InitializeDefaultFunctions();
-		_variableManager = new VariableManager();
-		_variableManager.InitializeBasicVariables();
-		_evaluator = new Evaluator(_functionManager, _variableManager);
-		_assignmentExpressionHandler = new AssignmentExpressionHandler(_evaluator, _variableManager, _functionManager);
-		_commandLineTool = new(
-			_functionAssignmentStrings,
-			_functionManager, _variableManager,
-			_environmentVariables);
+		var functionManager = new FunctionManager();
+		var variableManager = new VariableManager();
+
+		functionManager.InitializeDefaultFunctions();
+		variableManager.InitializeBasicVariables();
+
+		_evaluator = new Evaluator(functionManager, variableManager);
+		_assignmentExpressionHandler = new AssignmentExpressionHandler(_evaluator, variableManager, functionManager);
+		_commandLineTool = new(_functionAssignmentStrings, functionManager, variableManager, _environmentVariables);
 	}
+
 	public void Start()
 	{
 #if DEBUG
@@ -68,7 +65,7 @@ internal sealed class InternalEngineerCalculator
 					continue;
 				}
 
-				var tokensResult = new Lexer(input).Tokenize();
+				var tokensResult = _lexer.Tokenize(input);
 				if (!tokensResult.TryGetValue(out var tokensCollection))
 				{
 					PrintError(tokensResult.Error);
@@ -149,8 +146,7 @@ internal sealed class InternalEngineerCalculator
 		if(_environmentVariables["ShowExpressionTree"])
 			expression.PrettyPrint();
 
-		var evaluator = new Evaluator(_functionManager, _variableManager);
-		var result = evaluator.Evaluate(expression);
+		var result = _evaluator.Evaluate(expression);
 		if (!result.TryGetValue(out var resultValue))
 		{
 			PrintError(result.Error);
@@ -181,6 +177,7 @@ internal sealed class InternalEngineerCalculator
 	}
 
 	private void PrintError(string message) => PrintError(new Error(message));
+
 	private void PrintError(Error error)
 	{
 		Console.ForegroundColor = ConsoleColor.Yellow;

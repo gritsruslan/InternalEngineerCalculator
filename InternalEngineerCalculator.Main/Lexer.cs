@@ -5,11 +5,9 @@ using InternalEngineerCalculator.Main.Tokens;
 
 namespace InternalEngineerCalculator.Main;
 
-internal sealed class Lexer(string code)
+public sealed class Lexer
 {
-	private readonly List<Token> _tokens = [];
-
-	private readonly string _code = code;
+	private string _code = string.Empty;
 
 	private int _position;
 
@@ -46,8 +44,11 @@ internal sealed class Lexer(string code)
 			Next();
 	}
 
-	public Result<ICollection<Token>> Tokenize()
+	public Result<ICollection<Token>> Tokenize(string code)
 	{
+		List<Token> tokens = [];
+		_code = code;
+
 		while (true)
 		{
 			var tokenResult = NextToken();
@@ -57,10 +58,13 @@ internal sealed class Lexer(string code)
 			if(token.Type == TokenType.EndOfLine)
 				break;
 
-			_tokens.Add(token);
+			tokens.Add(token);
 		}
 
-		return _tokens;
+		_code = string.Empty;
+		_position = 0;
+
+		return tokens;
 	}
 
 	private Result<Token> NextToken()
