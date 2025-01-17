@@ -33,8 +33,17 @@ public sealed class VariableManager
 		return variable.Value;
 	}
 
-	public bool DeleteVariable(string name)
+
+	public EmptyResult DeleteVariable(string name)
 	{
-		return _variablesContainer.Remove(name);
+		if (!_variablesContainer.TryGetValue(name, out var variable))
+			return new Error($"There are no variable with name \"{name}\"");
+
+		if (variable.IsConstant)
+			return new Error($"Cannot delete a constant variable \"{name}\"!");
+
+		_variablesContainer.Remove(name);
+		
+		return EmptyResult.Success();
 	}
 }

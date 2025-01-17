@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using InternalEngineerCalculator.Main.Functions;
 using InternalEngineerCalculator.Main.Variables;
 
@@ -9,18 +10,20 @@ internal sealed class CommandLineTool(
 	VariableManager variableManager,
 	Dictionary<string, bool> environmentVariables)
 {
-	private FunctionManager _functionManager = functionManager;
+	private readonly FunctionManager _functionManager = functionManager;
 
-	private VariableManager _variableManager = variableManager;
+	private readonly VariableManager _variableManager = variableManager;
 
-	private Dictionary<string, bool> _environmentVariables = environmentVariables;
+	private readonly Dictionary<string, bool> _environmentVariables = environmentVariables;
 
-	private Dictionary<FunctionInfo, string> _functionAssignmentStrings = functionAssignmentStrings;
+	private readonly Dictionary<FunctionInfo, string> _functionAssignmentStrings = functionAssignmentStrings;
 
 
 	public void ProcessCommand(string command)
 	{
-		var commandComponents = command.Split(' ');
+		var commandComponents = command.Split(' ')
+			.Where(s => !string.IsNullOrWhiteSpace(s)).ToImmutableArray();
+
 		var commandName = commandComponents[0].ToLower();
 		var args = commandComponents[1..];
 
@@ -35,16 +38,16 @@ internal sealed class CommandLineTool(
 			case "#showtokens":
 				ShowTokensCommand(args); break;
 			case "#showexpressiontree" :
-				ShowExpressionTreeCommand(args); break;
+				ShowExpressionTree(args); break;
 			case "#showbasicfunctions":
 				ShowBasicFunctions(args); break;
 			case "#showvariables":
 				ShowVariables(args); break;
 			case "#deletevariable":
 				DeleteVariable(args); break;
-			case "showcustomfunctions":
+			case "#showcustomfunctions":
 				ShowCustomFunctions(args); break;
-			case "deletecustomfunction" :
+			case "#deletefunction" :
 				DeleteCustomFunction(args); break;
 			default:
 				Console.WriteLine($"Unknown command \"{commandName}\"");
@@ -52,19 +55,20 @@ internal sealed class CommandLineTool(
 		}
 	}
 
-	private void HelpCommand(string[] args)
+	private void HelpCommand(ImmutableArray<string> args)
 	{
 		if (args.Length != 0)
 		{
 			PrintIfIncorrectCountOfArguments("help", 0, args.Length);
 			return;
 		}
-
+//TODO
 		string helpString =
 
 			"""
 			InternalEngineerCalculator by @gritsruslan!
 
+			Range of possible values : +/- 1.7E-308 to 1.7E+308
 			Available math operators : + - * / ^ % !
 
 			Examples:
@@ -77,18 +81,19 @@ internal sealed class CommandLineTool(
 			#exit - exit calculator
 			#clear - clear console output
 			#help - output short calculator guide
+			#ShowTokens <true | false> - enable or disable tokens
 			#ShowExpressionTree <true | false> - enable or disable showing expression trees
-			#ShowBasicFunctions
-			#ShowCustomFunctions
-			#DeleteCustomFunction <name> <countOfArgs>
-			#ShowVariables
-			#DeleteVariable <name>
+			#ShowBasicFunctions - show basic calculator functions
+			#ShowCustomFunctions - shows user defined functions
+			#DeleteFunction <name> <countOfArgs> - delete user defined function
+			#ShowVariables - show user defined variables
+			#DeleteVariable <name> - delete variable
 			""";
 
 		Console.WriteLine(helpString);
 	}
 
-	private void ExitCommand(string[] args)
+	private void ExitCommand(ImmutableArray<string> args)
 	{
 		if (args.Length != 0)
 		{
@@ -99,7 +104,7 @@ internal sealed class CommandLineTool(
 		Environment.Exit(0);
 	}
 
-	private void ClearConsoleCommand(string[] args)
+	private void ClearConsoleCommand(ImmutableArray<string> args)
 	{
 		if (args.Length != 0)
 		{
@@ -110,7 +115,7 @@ internal sealed class CommandLineTool(
 		Console.Clear();
 	}
 
-	private void ShowTokensCommand(string[] args)
+	private void ShowTokensCommand(ImmutableArray<string> args)
 	{
 		if (args.Length != 1)
 		{
@@ -121,9 +126,15 @@ internal sealed class CommandLineTool(
 		var arg = args[0].ToLower();
 
 		if (arg == "true")
+		{
 			_environmentVariables["ShowTokens"] = true;
+			Console.WriteLine("Token display enabled!");
+		}
 		else if (arg == "false")
+		{
 			_environmentVariables["ShowTokens"] = false;
+			Console.WriteLine("Token display disabled!");
+		}
 		else
 		{
 			Console.ForegroundColor = ConsoleColor.Yellow;
@@ -132,7 +143,7 @@ internal sealed class CommandLineTool(
 		}
 	}
 
-	private void ShowExpressionTreeCommand(string[] args)
+	private void ShowExpressionTree(ImmutableArray<string> args)
 	{
 		if (args.Length != 1)
 		{
@@ -143,9 +154,15 @@ internal sealed class CommandLineTool(
 		var arg = args[0].ToLower();
 
 		if (arg == "true")
+		{
 			_environmentVariables["ShowExpressionTree"] = true;
+			Console.WriteLine("Display expression tree enabled.");
+		}
 		else if (arg == "false")
+		{
 			_environmentVariables["ShowExpressionTree"] = false;
+			Console.WriteLine("Display expression tree disabled.");
+		}
 		else
 		{
 			Console.ForegroundColor = ConsoleColor.Yellow;
@@ -154,7 +171,7 @@ internal sealed class CommandLineTool(
 		}
 	}
 
-	private void ShowBasicFunctions(string[] args)
+	private void ShowBasicFunctions(ImmutableArray<string> args)
 	{
 		if (args.Length != 0)
 		{
@@ -189,7 +206,7 @@ internal sealed class CommandLineTool(
 		Console.WriteLine(basicFunctions);
 	}
 
-	private void PrintIfIncorrectCountOfArguments(string command,int mustHaveArgs, int countOfArgs)
+	private void PrintIfIncorrectCountOfArguments(string command, int mustHaveArgs, int countOfArgs)
 	{
 		var argsString = mustHaveArgs == 1 ? "arguments" : "argument";
 		var transmised = countOfArgs == 1 ? "was" : "were";
@@ -205,7 +222,7 @@ internal sealed class CommandLineTool(
 
 	}
 
-	private void ShowCustomFunctions(string[] args)
+	private void ShowCustomFunctions(ImmutableArray<string> args)
 	{
 		if (args.Length != 0)
 		{
@@ -216,13 +233,13 @@ internal sealed class CommandLineTool(
 		Console.WriteLine("=========================================");
 		Console.WriteLine("Custom Functions : ");
 
-		foreach (var functions in _functionAssignmentStrings)
-			Console.WriteLine(functions);
+		foreach (var function in _functionAssignmentStrings)
+			Console.WriteLine(function.Value);
 
 		Console.WriteLine("=========================================");
 	}
 
-	private void DeleteCustomFunction(string[] args)
+	private void DeleteCustomFunction(ImmutableArray<string> args)
 	{
 		if (args.Length != 2)
 		{
@@ -249,7 +266,7 @@ internal sealed class CommandLineTool(
 		}
 	}
 
-	private void DeleteVariable(string[] args)
+	private void DeleteVariable(ImmutableArray<string> args)
 	{
 		if (args.Length != 1)
 		{
@@ -257,15 +274,15 @@ internal sealed class CommandLineTool(
 			return;
 		}
 
-		var isDeleted = _variableManager.DeleteVariable(args[0]);
+		var deleteResult = _variableManager.DeleteVariable(args[0]);
 
-		if(isDeleted)
+		if(deleteResult.IsSuccess)
 			Console.WriteLine($"Variable \"{args[0]}\" was successfully deleted!");
 		else
-			PrintError($"There are no variable with name \"{args[0]}\"");
+			PrintError(deleteResult.Error.Message);
 	}
 
-	private void ShowVariables(string[] args)
+	private void ShowVariables(ImmutableArray<string> args)
 	{
 		if (args.Length != 0)
 		{
@@ -278,7 +295,7 @@ internal sealed class CommandLineTool(
 		Console.WriteLine("=========================================");
 		Console.WriteLine("Variables : ");
 		foreach (var (name,value) in variables)
-			Console.WriteLine($"{name} = {value}");
+			Console.WriteLine($"{name} = {value.Value}");
 		Console.WriteLine("=========================================");
 	}
 }
