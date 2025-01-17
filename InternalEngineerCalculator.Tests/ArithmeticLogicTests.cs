@@ -43,5 +43,6 @@ public class ArithmeticLogicTests
 		yield return ["10 % 1.5", 1];
 		yield return ["13! - 3", 6_227_020_800 - 3];
 		yield return ["12/5", 2.4];
+		yield return ["-(4-2)!/-|5-8|!", (double) 1 / 3];
 	}
 }

@@ -30,14 +30,15 @@ public sealed class Parser(ImmutableArray<Token> tokens)
 
 	public Result<Expression> Parse()
 	{
-		var expression = ParseExpression();
+		var expression = ParseWithPrecedence();
 
 		if (Current.Type != TokenType.EndOfLine)
-			return new Error("Incorrect end of expression!");
+			return new Error("Incorrect expression!");
 
 		return expression;
 	}
 
+	#region Assignment
 	public Result<AssignmentExpression> ParseAssignmentExpression()
 	{
 
@@ -105,7 +106,7 @@ public sealed class Parser(ImmutableArray<Token> tokens)
 		if (Current.Type == TokenType.EndOfLine)
 			return new Error("Function cant be empty!");
 
-		var functionExpressionResult = ParseExpression();
+		var functionExpressionResult = ParseWithPrecedence();
 		if (!functionExpressionResult.TryGetValue(out var functionExpression))
 			return functionExpressionResult.Error;
 
@@ -126,72 +127,52 @@ public sealed class Parser(ImmutableArray<Token> tokens)
 		};
 	}
 
-	private Result<Expression> ParseExpression()
-	{
-		var leftResult = ParseTerm();
-		if (!leftResult.TryGetValue(out var left))
-			return leftResult;
+	#endregion
 
-		while (Current.Type is TokenType.Plus or TokenType.Minus)
-		{
-			var operationToken = Current as NonValueToken;
-			Next();
-
-			var rightResult = ParseTerm();
-			if (!rightResult.TryGetValue(out var right))
-				return rightResult;
-
-			var type = GetBinaryOperationType(operationToken!);
-			left = new BinaryExpression(left, type, right);
-		}
-
-		return left;
-	}
-
-
-	private Result<Expression> ParseTerm()
-	{
-		var leftResult = ParsePower();
-		if (!leftResult.TryGetValue(out var left))
-			return leftResult;
-
-		while (Current.Type is TokenType.Divide or TokenType.Multiply or TokenType.Remainder)
-		{
-			var operationToken = Current as NonValueToken;
-			Next();
-
-			var rightResult = ParsePower();
-			if (!rightResult.TryGetValue(out var right))
-				return rightResult;
-
-			var type = GetBinaryOperationType(operationToken!);
-			left = new BinaryExpression(left, type, right);
-		}
-
-		return left;
-	}
-
-	private Result<Expression> ParsePower()
+	private Result<Expression> ParseWithPrecedence(int parentPrecedence = 0)
 	{
 		var leftResult = ParseFactorial();
 		if (!leftResult.TryGetValue(out var left))
 			return leftResult;
 
-		while (Current.Type is TokenType.Pow)
+		while (true)
 		{
 			var operationToken = Current as NonValueToken;
+
+			if (operationToken is null)
+				return new Error("Incorrect expression!");
+
+			var operationPrecedence = GetOperatorPrecedence(operationToken.Type);
+
+			if(operationPrecedence == 0 || operationPrecedence <= parentPrecedence)
+				break;
+
 			Next();
 
-			var rightResult = ParseFactorial();
+			var rightResult = ParseWithPrecedence(operationPrecedence);
 			if (!rightResult.TryGetValue(out var right))
 				return rightResult;
 
-			var type = GetBinaryOperationType(operationToken!);
-			left = new BinaryExpression(left, type, right);
+			left = new BinaryExpression(left, GetBinaryOperationType(operationToken), right);
 		}
 
 		return left;
 	}
+
+	private int GetOperatorPrecedence(TokenType type)
+	{
+		return type switch
+		{
+			TokenType.Plus => 1,
+			TokenType.Minus => 1,
+			TokenType.Multiply => 2,
+			TokenType.Divide => 2,
+			TokenType.Remainder => 2,
+			TokenType.Pow => 3,
+			_ => 0
+		};
+	}
+
 	private Result<Expression> ParseFactorial()
 	{
 		var expResult = ParseParenthesisExpression();
@@ -241,7 +222,7 @@ public sealed class Parser(ImmutableArray<Token> tokens)
 		if (Current.Type == TokenType.ModulePipe)
 		{
 			Next();
-			var inModuleExpressionResult = ParseExpression();
+			var inModuleExpressionResult = ParseWithPrecedence();
 			if (!inModuleExpressionResult.TryGetValue(out var inModuleExpression))
 				return inModuleExpressionResult;
 
@@ -255,7 +236,7 @@ public sealed class Parser(ImmutableArray<Token> tokens)
 		if (Current.Type == TokenType.OpenParenthesis)
 		{
 			Next();
-			var inParenthesisExpressionResult = ParseExpression();
+			var inParenthesisExpressionResult = ParseWithPrecedence();
 			if (!inParenthesisExpressionResult.TryGetValue(out var inParenthesisExpression))
 				return inParenthesisExpressionResult;
 
@@ -286,7 +267,7 @@ public sealed class Parser(ImmutableArray<Token> tokens)
 		// while the function is finished parsing its arguments into expressions
 		while (Current.Type != TokenType.CloseParenthesis)
 		{
-			var parseResult = ParseExpression();
+			var parseResult = ParseWithPrecedence();
 			if (!parseResult.TryGetValue(out var expression))
 				return parseResult.Error;
 			expressions.Add(expression);
