@@ -73,22 +73,15 @@ public sealed class FunctionManager
 		return EmptyResult.Success();
 	}
 
-	public EmptyResult CreateNewCustomFunction(string name, IReadOnlyList<string> args, Expression functionExpression)
+	public bool CreateNewCustomFunction(string name, IReadOnlyList<string> args, Expression functionExpression)
 	{
 		var header = new FunctionInfo(name, args.Count);
-
-		if (HasFunction(header))
-			return new Error(
-				$"There are a function with name \"{name}\" and {args.Count} arguments. " +
-				$"If you want to override it, first of all delete old function!");
-
+		var isOverriding = HasFunction(header);
 		var convArgs = args.Select(arg => new FunctionArgument(arg));
-
 		var function = new CustomFunction(name, [..convArgs], functionExpression);
+		_functions[header] = function;
 
-		_functions.Add(header, function);
-
-		return EmptyResult.Success();
+		return isOverriding;
 	}
 
 	private void CreateNewBaseFunction(string name, int countOfArgs, Func<ImmutableArray<double>, double> function)

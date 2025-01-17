@@ -16,7 +16,7 @@ public sealed class AssignmentExpressionHandler(
 
 	private readonly FunctionManager _functionManager = functionManager;
 
-	public EmptyResult HandleFunctionAssignmentExpression(FunctionAssignmentExpression functionExpression) =>
+	public bool HandleFunctionAssignmentExpression(FunctionAssignmentExpression functionExpression) =>
 		_functionManager.CreateNewCustomFunction(
 			functionExpression.Name,
 			functionExpression.Args,

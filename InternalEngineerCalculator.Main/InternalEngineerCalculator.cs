@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using InternalEngineerCalculator.Main.Common;
 using InternalEngineerCalculator.Main.Expressions;
 using InternalEngineerCalculator.Main.Extensions;
@@ -43,7 +44,8 @@ internal sealed class InternalEngineerCalculator
 		_commandLineTool = new(_functionAssignmentStrings, functionManager, variableManager, _environmentVariables);
 	}
 
-	public void Start()
+	[DoesNotReturn]
+	public void StartLoop()
 	{
 #if DEBUG
 		Console.WriteLine("InternalEngineerCalculator by @gritsruslan! : Debug Mode");
@@ -120,15 +122,11 @@ internal sealed class InternalEngineerCalculator
 		}
 		else if (assignmentExpression is FunctionAssignmentExpression fe)
 		{
-			var functionAssignmentResult = _assignmentExpressionHandler.HandleFunctionAssignmentExpression(fe);
-			if (functionAssignmentResult.IsFailure)
-			{
-				PrintError(functionAssignmentResult.Error);
-				return;
-			}
-
-			_functionAssignmentStrings.Add(new FunctionInfo(fe.Name, fe.Args.Length), assignmentString);
-			Console.WriteLine($"Function \"{fe.Name}\" with {fe.Args.Length} needed arguments was successfully declared!");
+			var isOverriding = _assignmentExpressionHandler.HandleFunctionAssignmentExpression(fe);
+			_functionAssignmentStrings[new FunctionInfo(fe.Name, fe.Args.Length)] = assignmentString;
+			Console.WriteLine(isOverriding
+				? $"Function \"{fe.Name}\" with {fe.Args.Length} needed arguments was successfully overrided!"
+				: $"Function \"{fe.Name}\" with {fe.Args.Length} needed arguments was successfully declared!");
 		}
 	}
 
@@ -156,9 +154,9 @@ internal sealed class InternalEngineerCalculator
 		if (double.IsNaN(resultValue))
 			PrintError("The result cannot be calculated because its an imaginary number!");
 		else if (double.IsSubnormal(resultValue))
-			PrintError("The result cannot be calculated because its a subnormal value!");
+			PrintError("The result cannot be calculated because its a subnormal number!");
 		else if (double.IsInfinity(resultValue))
-			PrintError("The result cannot be calculated because its infinity!");
+			PrintError("The result cannot be calculated because its out of possible value range!");
 		else
 			Console.WriteLine($"Result : {resultValue}");
 	}
