@@ -10,15 +10,6 @@ internal sealed class CommandLineTool(
 	VariableManager variableManager,
 	Dictionary<string, bool> environmentVariables)
 {
-	private readonly FunctionManager _functionManager = functionManager;
-
-	private readonly VariableManager _variableManager = variableManager;
-
-	private readonly Dictionary<string, bool> _environmentVariables = environmentVariables;
-
-	private readonly Dictionary<FunctionInfo, string> _functionAssignmentStrings = functionAssignmentStrings;
-
-
 	public void ProcessCommand(string command)
 	{
 		var commandComponents = command.Split(' ')
@@ -62,20 +53,20 @@ internal sealed class CommandLineTool(
 			PrintIfIncorrectCountOfArguments("help", 0, args.Length);
 			return;
 		}
-//TODO
 		string helpString =
 
 			"""
 			InternalEngineerCalculator by @gritsruslan!
 
 			Range of possible values : +/- 1.7E-308 to 1.7E+308
-			Available math operators : + - * / ^ % !
+			Available math operators : + - * / ^ % ! |x|
 
 			Examples:
 			12 + 3 * (2 - 1)
 			2 ^ 3 + 52
-			1/20 + 1
-			-3! + 2
+			1/20 + 20 % 3
+			-3! + |-1|
+			1 / (1 + exp(-2))
 
 			Available commands :
 			#exit - exit calculator
@@ -127,12 +118,12 @@ internal sealed class CommandLineTool(
 
 		if (arg == "true")
 		{
-			_environmentVariables["ShowTokens"] = true;
+			environmentVariables["ShowTokens"] = true;
 			Console.WriteLine("Token display enabled!");
 		}
 		else if (arg == "false")
 		{
-			_environmentVariables["ShowTokens"] = false;
+			environmentVariables["ShowTokens"] = false;
 			Console.WriteLine("Token display disabled!");
 		}
 		else
@@ -155,12 +146,12 @@ internal sealed class CommandLineTool(
 
 		if (arg == "true")
 		{
-			_environmentVariables["ShowExpressionTree"] = true;
+			environmentVariables["ShowExpressionTree"] = true;
 			Console.WriteLine("Display expression tree enabled.");
 		}
 		else if (arg == "false")
 		{
-			_environmentVariables["ShowExpressionTree"] = false;
+			environmentVariables["ShowExpressionTree"] = false;
 			Console.WriteLine("Display expression tree disabled.");
 		}
 		else
@@ -233,7 +224,7 @@ internal sealed class CommandLineTool(
 		Console.WriteLine("=========================================");
 		Console.WriteLine("Custom Functions : ");
 
-		foreach (var function in _functionAssignmentStrings)
+		foreach (var function in functionAssignmentStrings)
 			Console.WriteLine(function.Value);
 
 		Console.WriteLine("=========================================");
@@ -255,13 +246,13 @@ internal sealed class CommandLineTool(
 		}
 
 		var info = new FunctionInfo(name, countOfArgs);
-		var deleteResult = _functionManager.DeleteFunction(info);
+		var deleteResult = functionManager.DeleteFunction(info);
 
 		if(deleteResult.IsFailure)
 			PrintError(deleteResult.Error.Message);
 		else
 		{
-			_functionAssignmentStrings.Remove(info);
+			functionAssignmentStrings.Remove(info);
 			Console.WriteLine($"Function \"{name}\" with \"{countOfArgs}\" was successfully deleted!");
 		}
 	}
@@ -274,7 +265,7 @@ internal sealed class CommandLineTool(
 			return;
 		}
 
-		var deleteResult = _variableManager.DeleteVariable(args[0]);
+		var deleteResult = variableManager.DeleteVariable(args[0]);
 
 		if(deleteResult.IsSuccess)
 			Console.WriteLine($"Variable \"{args[0]}\" was successfully deleted!");
@@ -290,7 +281,7 @@ internal sealed class CommandLineTool(
 			return;
 		}
 
-		var variables = _variableManager.GetVariables();
+		var variables = variableManager.GetVariables();
 
 		Console.WriteLine("=========================================");
 		Console.WriteLine("Variables : ");

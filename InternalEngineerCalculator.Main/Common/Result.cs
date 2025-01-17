@@ -1,5 +1,6 @@
 namespace InternalEngineerCalculator.Main.Common;
 
+/// <summary> Custom Result datatype implementation (like in Rust) </summary>
 public class Result<T>
 {
 	private readonly T _value;
@@ -40,8 +41,7 @@ public class Result<T>
 		value = _value;
 		return true;
 	}
-
-
+	
 	public static implicit operator Result<T>(T value) => new(value);
 
 	public static implicit operator Result<T>(Error error) => new(error);

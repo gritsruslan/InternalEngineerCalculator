@@ -1,7 +1,4 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=4925ee09_002D4c15_002D4857_002D88ac_002Dab839b0ec19a/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="UnitTest1" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::8DBBAAE8-0D33-47B9-BBD3-51A3BFB90FCC::net8.0::InternalEngineerCalculator.Tests.FunctionTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::8DBBAAE8-0D33-47B9-BBD3-51A3BFB90FCC::net8.0::InternalEngineerCalculator.Tests.VarableTests&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
+  &lt;Project Location="D:\Programing\GitHub Projects\InternalEngineerCalculator\InternalEngineerCalculator.Tests" Presentation="&amp;lt;InternalEngineerCalculator.Tests&amp;gt;" /&gt;&#xD;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

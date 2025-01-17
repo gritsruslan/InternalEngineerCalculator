@@ -169,7 +169,6 @@ internal sealed class InternalEngineerCalculator
 #else
 		Console.ForegroundColor = ConsoleColor.DarkRed;
 		Console.WriteLine("An unhandled error occurred while the program was running. Please contact @gritsruslan!");
-		Console.WriteLine();
 		Console.ForegroundColor = DefaultColor;
 #endif
 	}
@@ -180,7 +179,6 @@ internal sealed class InternalEngineerCalculator
 	{
 		Console.ForegroundColor = ConsoleColor.Yellow;
 		Console.WriteLine(error.Message);
-		Console.WriteLine();
 		Console.ForegroundColor = DefaultColor;
 	}
 }

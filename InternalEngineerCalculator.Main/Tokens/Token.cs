@@ -2,9 +2,9 @@ namespace InternalEngineerCalculator.Main.Tokens;
 
 public abstract class Token(TokenType type, string valueString)
 {
-	public string ValueString => valueString;
+	public string ValueString { get; } = valueString;
 
-	public TokenType Type => type;
+	public TokenType Type { get; } = type;
 
 	public override string ToString() => Type.ToString();
 }

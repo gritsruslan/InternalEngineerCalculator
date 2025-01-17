@@ -7,15 +7,13 @@ namespace InternalEngineerCalculator.Main;
 
 public sealed class Parser(ImmutableArray<Token> tokens)
 {
-	private readonly ImmutableArray<Token> _tokens = tokens;
-
 	private readonly Token _emptyToken = new NonValueToken(TokenType.EndOfLine, string.Empty);
 
 	private int _position;
 
-	private Token Current => _position < _tokens.Length ? _tokens[_position] : _emptyToken;
+	private Token Current => _position < tokens.Length ? tokens[_position] : _emptyToken;
 
-	private Token NextToken => _position + 1 < _tokens.Length ? _tokens[_position + 1] : _emptyToken;
+	private Token NextToken => _position + 1 < tokens.Length ? tokens[_position + 1] : _emptyToken;
 
 	private void Next() => _position++;
 

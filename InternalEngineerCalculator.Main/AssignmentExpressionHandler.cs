@@ -10,14 +10,8 @@ public sealed class AssignmentExpressionHandler(
 	VariableManager variableManager,
 	FunctionManager functionManager)
 {
-	private readonly Evaluator _evaluator = evaluator;
-
-	private readonly VariableManager _variableManager = variableManager;
-
-	private readonly FunctionManager _functionManager = functionManager;
-
 	public bool HandleFunctionAssignmentExpression(FunctionAssignmentExpression functionExpression) =>
-		_functionManager.CreateNewCustomFunction(
+		functionManager.CreateNewCustomFunction(
 			functionExpression.Name,
 			functionExpression.Args,
 			functionExpression.Expression);
@@ -26,11 +20,13 @@ public sealed class AssignmentExpressionHandler(
 	{
 		var variableName = variableExpression.Name;
 
-		var variableValueResult = _evaluator.Evaluate(variableExpression.Expression);
+		var variableValueResult = evaluator.Evaluate(variableExpression.Expression);
 		if (!variableValueResult.TryGetValue(out var variableValue))
 			return variableValueResult;
 
-		_variableManager.InitializeOrUpdateVariable(variableName, variableValue);
+		var result = variableManager.InitializeOrUpdateVariable(variableName, variableValue);
+		if (result.IsFailure)
+			return result.Error;
 
 		return variableValue; // returns new variable value for print
 	}

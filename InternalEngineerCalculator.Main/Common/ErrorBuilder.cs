@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Text;
+using InternalEngineerCalculator.Main.Extensions;
 using InternalEngineerCalculator.Main.Functions;
 using InternalEngineerCalculator.Main.Tokens;
 
@@ -24,6 +25,7 @@ internal static class ErrorBuilder
 	public static Error UndefinedVariable(string name, ImmutableArray<FunctionInfo> callStack) =>
 		new($"Undefined variable \"{name}\" {GetStackString(callStack)}!");
 
+	public static Error DivisionByZero() => new("Division by zero or by too small number!");
 	public static Error UndefinedFunction(string name, int countOfArgs, ImmutableArray<FunctionInfo> callStack) =>
 		new($"Undefined function \"{name}\" with {countOfArgs} args {GetStackString(callStack)}!");
 
@@ -41,7 +43,7 @@ internal static class ErrorBuilder
 		sb.Append("in ");
 		for (int i = 0; i < callStack.Length; i++)
 		{
-			var str = $"{callStack[i].Name}<{callStack[i].CountOfArg}>";
+			var str = callStack[i].ToPrettyString();
 			if (i + 1 == callStack.Length)
 				sb.Append(str);
 			else

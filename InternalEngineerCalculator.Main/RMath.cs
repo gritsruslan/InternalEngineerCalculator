@@ -1,4 +1,3 @@
-using System.Data.SqlTypes;
 using InternalEngineerCalculator.Main.Common;
 
 namespace InternalEngineerCalculator.Main;

@@ -6,12 +6,7 @@ namespace InternalEngineerCalculator.Main.Functions;
 
 public sealed class FunctionManager
 {
-	private readonly Dictionary<FunctionInfo, Function> _functions;
-
-	public FunctionManager()
-	{
-		_functions = new Dictionary<FunctionInfo, Function>();
-	}
+	private readonly Dictionary<FunctionInfo, Function> _functions = new();
 
 	public void InitializeDefaultFunctions()
 	{

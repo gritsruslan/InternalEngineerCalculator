@@ -36,7 +36,7 @@ internal static class ExpressionExtensions
 
 	private static void NumberExpressionPrint(NumberExpression expression, string offset)
 	{
-		Console.WriteLine(offset + $"Number : {expression.Token.ValueString}");
+		Console.WriteLine(offset + $"Number : {expression.ValueString}");
 	}
 
 	private static void UnaryExpressionPrint(UnaryExpression expression, ref string offset)

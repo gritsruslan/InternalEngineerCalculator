@@ -5,6 +5,6 @@ static class Program
 	private static void Main()
 	{
 		var internalEngineerCalculator = new InternalEngineerCalculator();
-		internalEngineerCalculator.Start();
+		internalEngineerCalculator.StartLoop();
 	}
 }

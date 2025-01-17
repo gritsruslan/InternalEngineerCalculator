@@ -9,10 +9,6 @@ namespace InternalEngineerCalculator.Main;
 
 public sealed class Evaluator(FunctionManager functionManager, VariableManager variableManager)
 {
-	private readonly FunctionManager _functionManager = functionManager;
-
-	private readonly VariableManager _variableManager = variableManager;
-
 	// Stack of arguments of called custom functions
 	private readonly Stack<FunctionEvaluatingInfo> _functionCallStack = [];
 
@@ -69,7 +65,7 @@ public sealed class Evaluator(FunctionManager functionManager, VariableManager v
 			return rightResult;
 
 		if (be.OperationType is BinaryOperationType.Division or BinaryOperationType.Remainder && right == 0)
-			return new Error("Division by zero or by too small value!");
+			return ErrorBuilder.DivisionByZero();
 
 		var result = be.OperationType switch
 		{
@@ -94,7 +90,7 @@ public sealed class Evaluator(FunctionManager functionManager, VariableManager v
 				return arg;
 		}
 
-		var variableResult = _variableManager.GetVariableValue(ve.Name);
+		var variableResult = variableManager.GetVariableValue(ve.Name);
 
 		if (variableResult.IsFailure)
 			return ErrorBuilder.UndefinedVariable(ve.Name, FunctionCallArray);
@@ -105,7 +101,7 @@ public sealed class Evaluator(FunctionManager functionManager, VariableManager v
 	private Result<double> EvaluateFunctionCallExpression(FunctionCallExpression fe)
 	{
 		//GetFunction
-		var funcResult = _functionManager.GetFunction(new FunctionInfo(fe.Name, fe.CountOfArgs));
+		var funcResult = functionManager.GetFunction(new FunctionInfo(fe.Name, fe.CountOfArgs));
 		if (!funcResult.TryGetValue(out var function))
 			return ErrorBuilder.UndefinedFunction(fe.Name, fe.CountOfArgs, FunctionCallArray);
 

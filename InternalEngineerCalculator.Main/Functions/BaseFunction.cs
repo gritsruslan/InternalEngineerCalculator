@@ -7,7 +7,7 @@ internal sealed class BaseFunction(string name, int countOfArgs, Func<ImmutableA
 {
 	public Func<ImmutableArray<double>, double> Function { get; } = function;
 
-	public override int CountOfArgs { get; } = countOfArgs;
-
 	public override bool IsBaseFunction => true;
+
+	public override int CountOfArgs { get; } = countOfArgs;
 }

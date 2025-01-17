@@ -59,7 +59,7 @@ public class FunctionTests
 			expr.IsSuccess.Should().BeTrue();
 			var handleResult = assignmentHandler
 				.HandleFunctionAssignmentExpression((expr.Value as FunctionAssignmentExpression)!);
-			handleResult.IsSuccess.Should().BeTrue();
+			handleResult.Should().BeFalse();
 		}
 
 		var tokensRes = lexer.Tokenize(input);

@@ -4,7 +4,7 @@ namespace InternalEngineerCalculator.Main.Expressions;
 
 internal sealed class VariableExpression(Token identifierToken) : Expression
 {
-	private readonly Token _variableToken = identifierToken;
-
-	public string Name => _variableToken.ValueString;
+	private Token Token { get; } = identifierToken;
+	
+	public string Name => Token.ValueString;
 }

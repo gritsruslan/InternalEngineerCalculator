@@ -1,9 +1,6 @@
 namespace InternalEngineerCalculator.Main.Common;
 
-/// <summary>
-/// Custom Option datatype implementation (like in Rust)
-/// </summary>
-/// <typeparam name="T"></typeparam>
+/// <summary> Custom Option datatype implementation (like in Rust) </summary>
 public class Option<T>
 {
     private string NoneValueMessage => $"The value in Option<{typeof(T)}> was None!";
