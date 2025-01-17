@@ -22,21 +22,32 @@ internal static class ErrorBuilder
 		new($"Cannot find a function \"{functionName}\" with {countOfArgs} needed arguments");
 
 	public static Error UndefinedVariable(string name, ImmutableArray<FunctionInfo> callStack) =>
-		new($"Undefined variable \"{name}\" in {GetStackString(callStack)}!");
+		new($"Undefined variable \"{name}\" {GetStackString(callStack)}!");
 
 	public static Error UndefinedFunction(string name, int countOfArgs, ImmutableArray<FunctionInfo> callStack) =>
-		new($"Undefined function \"{name}\" with {countOfArgs} args in {GetStackString(callStack)}!");
+		new($"Undefined function \"{name}\" with {countOfArgs} args {GetStackString(callStack)}!");
+
+	public static Error FuncProducesCircularDependency(string name, int countOfArgs) =>
+		 new($"Function \"{name}\" with {countOfArgs} args produces circular dependency (Function calls itself)! " +
+		     $"Override it for correct working.");
 
 	private static string GetStackString(ImmutableArray<FunctionInfo> callStack)
 	{
 		var sb = new StringBuilder();
+
+		if (callStack.IsEmpty)
+			return string.Empty;
+
+		sb.Append("in ");
 		for (int i = 0; i < callStack.Length; i++)
 		{
-			if (i - 1 == callStack.Length)
-				sb.Append(callStack);
+			var str = $"{callStack[i].Name}<{callStack[i].CountOfArg}>";
+			if (i + 1 == callStack.Length)
+				sb.Append(str);
 			else
-				sb.Append($"{callStack} in ");
+				sb.Append($"{str} in ");
 		}
+
 		return sb.ToString();
 	}
 }

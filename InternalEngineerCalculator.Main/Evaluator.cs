@@ -15,10 +15,19 @@ public sealed class Evaluator(FunctionManager functionManager, VariableManager v
 
 	// Stack of arguments of called custom functions
 	private readonly Stack<FunctionEvaluatingInfo> _functionCallStack = [];
+
 	private ImmutableArray<FunctionInfo> FunctionCallArray => _functionCallStack
-		.Select(fi => new FunctionInfo(fi.Name, fi.CountOfArgs)).ToImmutableArray();
+		.Select(fi => new FunctionInfo(fi.Name, fi.CountOfArgs))
+		.Reverse().ToImmutableArray();
 
 	private bool IsInCustomFunction => !_functionCallStack.IsEmpty();
+
+	private bool DoesProduceCircularDependency(FunctionInfo funcInfo)
+	{
+		return _functionCallStack
+			.Select(calledFunc => new FunctionInfo(calledFunc.Name, calledFunc.CountOfArgs))
+			.Any(func => func == funcInfo);
+	}
 
 	public Result<double> Evaluate(Expression expression)
 	{
@@ -60,7 +69,7 @@ public sealed class Evaluator(FunctionManager functionManager, VariableManager v
 			return rightResult;
 
 		if (be.OperationType is BinaryOperationType.Division or BinaryOperationType.Remainder && right == 0)
-			return new Error("Divizion by zero is not allowed!");
+			return new Error("Division by zero or by too small value!");
 
 		var result = be.OperationType switch
 		{
@@ -127,6 +136,11 @@ public sealed class Evaluator(FunctionManager functionManager, VariableManager v
 
 	private Result<double> EvaluateCustomFunction(CustomFunction cf, ImmutableArray<double> args)
 	{
+		//Check for producing circular dependency
+		var doesProduceCd = DoesProduceCircularDependency(new FunctionInfo(cf.Name, cf.CountOfArgs));
+		if (doesProduceCd)
+			return ErrorBuilder.FuncProducesCircularDependency(cf.Name, cf.CountOfArgs);
+
 		var argsDict = new Dictionary<FunctionArgument, double>(args.Length);
 
 		for (int i = 0; i < args.Length; i++)
