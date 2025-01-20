@@ -1,7 +1,6 @@
-using InternalEngineerCalculator.Main.Functions;
+namespace InternalEngineerCalculator.Main.Functions;
 
-namespace InternalEngineerCalculator.Main;
-
+/// <summary> function info used is evaluating process </summary>
 internal class FunctionEvaluatingInfo(string name, int countOfArgs, Dictionary<FunctionArgument, double> argsDictionary)
 {
 	public string Name { get; } = name;

@@ -1,10 +1,12 @@
 using System.Collections.Immutable;
+using System.Diagnostics;
 using InternalEngineerCalculator.Main.Common;
 using InternalEngineerCalculator.Main.Expressions;
 using InternalEngineerCalculator.Main.Tokens;
 
 namespace InternalEngineerCalculator.Main;
 
+/// <summary> Parse collection of tokens into AST tree expression </summary>
 public sealed class Parser(ImmutableArray<Token> tokens)
 {
 	private readonly Token _emptyToken = new NonValueToken(TokenType.EndOfLine, string.Empty);
@@ -23,6 +25,7 @@ public sealed class Parser(ImmutableArray<Token> tokens)
 		tokens.Any(t => t.Type == TokenType.EqualSign);
 
 	private bool IsVariableAssignmentExpression() => Current.Type == TokenType.Identifier;
+
 	private bool IsFunctionAssignmentExpression() =>
 		Current.Type == TokenType.Identifier && NextToken.Type == TokenType.OpenParenthesis;
 
@@ -31,7 +34,7 @@ public sealed class Parser(ImmutableArray<Token> tokens)
 		var expression = ParseWithPrecedence();
 
 		if (Current.Type != TokenType.EndOfLine)
-			return new Error("Incorrect expression!");
+			return ErrorBuilder.IncorrectExpression();
 
 		return expression;
 	}
@@ -111,7 +114,7 @@ public sealed class Parser(ImmutableArray<Token> tokens)
 		return new FunctionAssignmentExpression(functionName, [..args], functionExpression);
 	}
 
-	private BinaryOperationType GetBinaryOperationType(NonValueToken token)
+	private static BinaryOperationType GetBinaryOperationType(NonValueToken token)
 	{
 		return token.Type switch
 		{
@@ -127,6 +130,8 @@ public sealed class Parser(ImmutableArray<Token> tokens)
 
 	#endregion
 
+	/// <summary> parsing expressions taking into account the math order of operations </summary>
+	/// The idea is partly taken from https://github.com/terrajobst/minsk
 	private Result<Expression> ParseWithPrecedence(int parentPrecedence = 0)
 	{
 		var leftResult = ParseFactorial();
@@ -138,10 +143,11 @@ public sealed class Parser(ImmutableArray<Token> tokens)
 			var operationToken = Current as NonValueToken;
 
 			if (operationToken is null)
-				return new Error("Incorrect expression!");
+				return ErrorBuilder.IncorrectExpression();
 
 			var operationPrecedence = GetOperatorPrecedence(operationToken.Type);
 
+			// if unknown operation token (zero) or precedence is less or equals than parent precedence
 			if(operationPrecedence == 0 || operationPrecedence <= parentPrecedence)
 				break;
 
@@ -157,7 +163,7 @@ public sealed class Parser(ImmutableArray<Token> tokens)
 		return left;
 	}
 
-	private int GetOperatorPrecedence(TokenType type)
+	private static int GetOperatorPrecedence(TokenType type)
 	{
 		return type switch
 		{
@@ -171,6 +177,7 @@ public sealed class Parser(ImmutableArray<Token> tokens)
 		};
 	}
 
+	/// <summary> Parsing factorials, like 5!, 3!</summary>
 	private Result<Expression> ParseFactorial()
 	{
 		var expResult = ParseParenthesisExpression();
@@ -196,6 +203,7 @@ public sealed class Parser(ImmutableArray<Token> tokens)
 			return new NumberExpression((token as NumberToken)!);
 		}
 
+		// if its function call
 		if (Current.Type == TokenType.Identifier && NextToken.Type == TokenType.OpenParenthesis)
 		{
 			var exprResult =  ParseFunctionCallExpression();
@@ -208,6 +216,7 @@ public sealed class Parser(ImmutableArray<Token> tokens)
 			return new VariableExpression(token);
 		}
 
+		// if its unary minus operation (like -3, -1)
 		if (Current.Type == TokenType.Minus)
 		{
 			Next();
@@ -225,12 +234,13 @@ public sealed class Parser(ImmutableArray<Token> tokens)
 				return inModuleExpressionResult;
 
 			if (Current.Type != TokenType.ModulePipe)
-				return new Error("Pipe!");
+				return new Error("Incorrect expression! Module expression must have close pipe!");
 			Next();
 
 			return new UnaryExpression(inModuleExpression, UnaryExpressionType.Module);
 		}
 
+		// parse parenthesis expression
 		if (Current.Type == TokenType.OpenParenthesis)
 		{
 			Next();
@@ -239,12 +249,13 @@ public sealed class Parser(ImmutableArray<Token> tokens)
 				return inParenthesisExpressionResult;
 
 			if (Current.Type != TokenType.CloseParenthesis)
-				return new Error("Close parenthesis!");
+				return new Error("Incorrect expression! Parenthesis expression must have close parentesis!");
 			Next();
 
 			return inParenthesisExpression;
 		}
 
+		Debug.Assert(false, "Error in inout!");
 		return new Error("Error in inout!");
 	}
 
@@ -256,7 +267,8 @@ public sealed class Parser(ImmutableArray<Token> tokens)
 		Next(2);
 
 		if (Current.Type == TokenType.EndOfLine)
-			return ErrorBuilder.EndOfInput();
+			return ErrorBuilder.IncorrectExpression();
+
 		if (Current.Type == TokenType.CloseParenthesis)
 			return new Error("Function cannot have zero arguments!");
 
@@ -280,7 +292,7 @@ public sealed class Parser(ImmutableArray<Token> tokens)
 				Next(); // skip comma
 
 			if (Current.Type == TokenType.EndOfLine)
-				return ErrorBuilder.EndOfInput();
+				return ErrorBuilder.IncorrectExpression();
 		}
 
 		Next(); // skip close parenthesis

@@ -53,7 +53,7 @@ internal sealed class CommandLineTool(
 			PrintIfIncorrectCountOfArguments("help", 0, args.Length);
 			return;
 		}
-		string helpString =
+		const string helpString =
 
 			"""
 			InternalEngineerCalculator by @gritsruslan!
@@ -170,7 +170,7 @@ internal sealed class CommandLineTool(
 			return;
 		}
 
-		var basicFunctions =
+		const string basicFunctions =
 			"""
 			=========================================
 			Basic functions:

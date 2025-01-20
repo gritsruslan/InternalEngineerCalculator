@@ -7,23 +7,29 @@ using InternalEngineerCalculator.Main.Variables;
 
 namespace InternalEngineerCalculator.Main;
 
+/// <summary> Evaluate ast-tree into number </summary>
 public sealed class Evaluator(FunctionManager functionManager, VariableManager variableManager)
 {
-	// Stack of arguments of called custom functions
+	// Function call stack with their arguments
 	private readonly Stack<FunctionEvaluatingInfo> _functionCallStack = [];
 
+	// reduce call stack to call immut array for convenience
 	private ImmutableArray<FunctionInfo> FunctionCallArray => _functionCallStack
 		.Select(fi => new FunctionInfo(fi.Name, fi.CountOfArgs))
 		.Reverse().ToImmutableArray();
 
-	private bool IsInCustomFunction => !_functionCallStack.IsEmpty();
+	private bool IsInCustomFunction => !_functionCallStack.IsNotEmpty();
 
-	private bool DoesProduceCircularDependency(FunctionInfo funcInfo)
-	{
-		return _functionCallStack
-			.Select(calledFunc => new FunctionInfo(calledFunc.Name, calledFunc.CountOfArgs))
+	/// <summary> Check function for circular dependency during evaluation </summary>
+	// Example :
+	// f(x) = 20 + x
+	// g(x) = f(x) + 1
+	// #override f(x) = g(x) / 42
+	// f(x) calls g(x) that calls f(x) => circular dependency, can't evaluate function
+	private bool DoesProduceCircularDependency(FunctionInfo funcInfo) =>
+		_functionCallStack.Select(calledFunc => new FunctionInfo(calledFunc.Name, calledFunc.CountOfArgs))
 			.Any(func => func == funcInfo);
-	}
+
 
 	public Result<double> Evaluate(Expression expression)
 	{
@@ -132,16 +138,17 @@ public sealed class Evaluator(FunctionManager functionManager, VariableManager v
 
 	private Result<double> EvaluateCustomFunction(CustomFunction cf, ImmutableArray<double> args)
 	{
-		//Check for producing circular dependency
+		// Check for producing circular dependency (when function calls itself)
 		var doesProduceCd = DoesProduceCircularDependency(new FunctionInfo(cf.Name, cf.CountOfArgs));
 		if (doesProduceCd)
 			return ErrorBuilder.FuncProducesCircularDependency(cf.Name, cf.CountOfArgs);
 
+		// Create function arguments dictionary
 		var argsDict = new Dictionary<FunctionArgument, double>(args.Length);
-
 		for (int i = 0; i < args.Length; i++)
 			argsDict.Add(cf.Arguments[i], args[i]);
 
+		//Push arguments in call stack
 		_functionCallStack.Push(new FunctionEvaluatingInfo(cf.Name, args.Length, argsDict));
 		var evalResult = Evaluate(cf.Expression);
 		_functionCallStack.Pop();

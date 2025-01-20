@@ -23,12 +23,13 @@ internal sealed class InternalEngineerCalculator
 
 	private readonly CommandLineTool _commandLineTool;
 
+	/// <summary>A container of function assignment strings used only when printing to the user</summary>
 	private readonly Dictionary<FunctionInfo, string> _functionAssignmentStrings = [];
 
 	private readonly Dictionary<string, bool> _environmentVariables = new()
 	{
 		{ "ShowTokens", false },
-		{ "ShowExpressionTree", false },
+		{ "ShowExpressionTree", false }
 	};
 
 	public InternalEngineerCalculator()
@@ -104,7 +105,7 @@ internal sealed class InternalEngineerCalculator
 			return;
 		}
 
-		if(_environmentVariables["ShowExpressionTree"])
+		if(_environmentVariables["ShowExpressionTree"]) // Show expression AST tree
 			assignmentExpression.PrettyPrint();
 
 		if (assignmentExpression is VariableAssignmentExpression ve)
@@ -141,7 +142,7 @@ internal sealed class InternalEngineerCalculator
 			return;
 		}
 
-		if(_environmentVariables["ShowExpressionTree"])
+		if(_environmentVariables["ShowExpressionTree"]) // Show expression AST tree
 			expression.PrettyPrint();
 
 		var result = _evaluator.Evaluate(expression);
@@ -168,7 +169,7 @@ internal sealed class InternalEngineerCalculator
 		Console.WriteLine(exception);
 #else
 		Console.ForegroundColor = ConsoleColor.DarkRed;
-		Console.WriteLine("An unhandled error occurred while the program was running. Please contact @gritsruslan!");
+		Console.WriteLine("An unhandled error occurred while the program was running, please contact @gritsruslan! See logs for more informaton.");
 		Console.ForegroundColor = DefaultColor;
 #endif
 	}

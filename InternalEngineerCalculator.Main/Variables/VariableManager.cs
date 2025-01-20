@@ -2,9 +2,11 @@ using InternalEngineerCalculator.Main.Common;
 
 namespace InternalEngineerCalculator.Main.Variables;
 
+/// <summary> Container for functions </summary>
 public sealed class VariableManager
 {
 	private readonly Dictionary<string, Variable> _variablesContainer = [];
+
 	internal IReadOnlyDictionary<string, Variable> GetVariables() => _variablesContainer;
 
 	public void InitializeBasicVariables()
@@ -13,8 +15,6 @@ public sealed class VariableManager
 		_variablesContainer.Add("e", new Variable("e", Math.E, true));
 		_variablesContainer.Add("tau", new Variable("e", Math.Tau, true));
 	}
-
-	public bool HasVariable(string name) => _variablesContainer.ContainsKey(name);
 
 	public EmptyResult InitializeOrUpdateVariable(string name, double value)
 	{
@@ -43,7 +43,7 @@ public sealed class VariableManager
 			return new Error($"Cannot delete a constant variable \"{name}\"!");
 
 		_variablesContainer.Remove(name);
-		
+
 		return EmptyResult.Success();
 	}
 }

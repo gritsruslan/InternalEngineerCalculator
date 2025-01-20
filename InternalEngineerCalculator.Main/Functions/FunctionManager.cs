@@ -4,6 +4,7 @@ using InternalEngineerCalculator.Main.Expressions;
 
 namespace InternalEngineerCalculator.Main.Functions;
 
+/// <summary> Container for functions </summary>
 public sealed class FunctionManager
 {
 	private readonly Dictionary<FunctionInfo, Function> _functions = new();
@@ -38,7 +39,7 @@ public sealed class FunctionManager
 		CreateNewBaseFunction("log", 2, args => Math.Log(args[0], args[1]));
 		//Ln
 		CreateNewBaseFunction("ln", 1, args => RMath.Ln(args[0]));
-		//E
+		//Exp
 		CreateNewBaseFunction("exp", 1, args => Math.Exp(args[0]));
 		//Pow
 		CreateNewBaseFunction("pow", 2, args => Math.Pow(args[0], args[1]));
@@ -68,7 +69,7 @@ public sealed class FunctionManager
 		return EmptyResult.Success();
 	}
 
-	public bool CreateNewCustomFunction(string name, IReadOnlyList<string> args, Expression functionExpression)
+	public bool CreateOrOverrideCustomFunction(string name, IReadOnlyList<string> args, Expression functionExpression)
 	{
 		var header = new FunctionInfo(name, args.Count);
 		var isOverriding = HasFunction(header);

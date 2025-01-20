@@ -5,13 +5,14 @@ using InternalEngineerCalculator.Main.Variables;
 
 namespace InternalEngineerCalculator.Main;
 
+/// <summary> functions and variables assignment handler </summary>
 public sealed class AssignmentExpressionHandler(
 	Evaluator evaluator,
 	VariableManager variableManager,
 	FunctionManager functionManager)
 {
 	public bool HandleFunctionAssignmentExpression(FunctionAssignmentExpression functionExpression) =>
-		functionManager.CreateNewCustomFunction(
+		functionManager.CreateOrOverrideCustomFunction(
 			functionExpression.Name,
 			functionExpression.Args,
 			functionExpression.Expression);

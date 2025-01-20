@@ -2,6 +2,7 @@ using InternalEngineerCalculator.Main.Common;
 
 namespace InternalEngineerCalculator.Main;
 
+/// <summary> Some math functions used in program </summary>
 internal static class RMath
 {
 	public static Result<double> Factorial(double number)

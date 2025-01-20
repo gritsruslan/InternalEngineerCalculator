@@ -5,6 +5,7 @@ using InternalEngineerCalculator.Main.Tokens;
 
 namespace InternalEngineerCalculator.Main;
 
+/// <summary> Converts the input string into a collection of meaningful tokens </summary>
 public sealed class Lexer
 {
 	private string _code = string.Empty;

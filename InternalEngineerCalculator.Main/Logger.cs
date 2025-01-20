@@ -1,5 +1,6 @@
 namespace InternalEngineerCalculator.Main;
 
+/// <summary> Simple exceptions logger </summary>
 internal sealed class Logger
 {
 	private static string LogDirectory => Path.Combine(Environment.CurrentDirectory, "log");
@@ -7,7 +8,6 @@ internal sealed class Logger
 	public void LogException(Exception exception)
 	{
 #if DEBUG
-		return;
 #else
 		if (!Path.Exists(LogDirectory))
 			Directory.CreateDirectory(LogDirectory);
