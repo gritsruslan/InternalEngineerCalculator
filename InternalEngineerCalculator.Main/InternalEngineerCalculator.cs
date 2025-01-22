@@ -13,7 +13,9 @@ internal sealed class InternalEngineerCalculator
 {
 	private const ConsoleColor DefaultColor = ConsoleColor.Gray;
 
+#if RELEASE
 	private readonly Logger _logger = new();
+#endif
 
 	private readonly Lexer _lexer = new();
 
@@ -46,7 +48,7 @@ internal sealed class InternalEngineerCalculator
 	}
 
 	[DoesNotReturn]
-	public void StartLoop()
+	public Task StartLoop()
 	{
 #if DEBUG
 		Console.WriteLine("InternalEngineerCalculator by @gritsruslan! : Debug Mode");
@@ -87,7 +89,9 @@ internal sealed class InternalEngineerCalculator
 			}
 			catch (Exception e)
 			{
+#if RELEASE
 				_logger.LogException(e);
+#endif
 				PrintException(e);
 			}
 		}

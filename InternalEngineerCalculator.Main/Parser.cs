@@ -256,7 +256,7 @@ public sealed class Parser(ImmutableArray<Token> tokens)
 		}
 
 		Debug.Assert(false, "Error in inout!");
-		return new Error("Error in inout!");
+		return ErrorBuilder.IncorrectExpression();
 	}
 
 	private Result<Expression> ParseFunctionCallExpression()

@@ -105,7 +105,7 @@ public sealed class Lexer
 			if (Current == dot && !hasDot)
 				hasDot = true;
 			else if (Current == dot && hasDot)
-				return new Error("Invalid number token!");
+				return new Error("Invalid number token in expression!");
 
 			tokenString += Current;
 

@@ -5,16 +5,18 @@ internal sealed class Logger
 {
 	private static string LogDirectory => Path.Combine(Environment.CurrentDirectory, "log");
 
-	public void LogException(Exception exception)
+	public void LogException(Exception e)
 	{
-#if DEBUG
-#else
 		if (!Path.Exists(LogDirectory))
 			Directory.CreateDirectory(LogDirectory);
 
-		var logName = DateTime.UtcNow.ToString("yyyy-MM-dd_HH::mm::ss") + "_log.txt";
+		var logName = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + "_log.txt";
 		var filePath = Path.Combine(LogDirectory, logName);
-		File.WriteAllText(filePath, exception.ToString());
-#endif
+
+		string logMessage = $"[{DateTime.Now}] {e.GetType()}: {e.Message}\n{e.StackTrace}\n";
+
+		using StreamWriter fs = new StreamWriter(filePath, true);
+
+		fs.WriteLine(logMessage);
 	}
 }
