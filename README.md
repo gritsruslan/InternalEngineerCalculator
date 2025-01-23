@@ -5,9 +5,13 @@
 ## Functional
 
 Base math operators support : +, -, \*, /, ^, % |x|, x!
+
 Base math variables : π, e, 𝜏
+
 Base math functions : sin, cos, tg, ctg, log, exp, pow, etc.
+
 Create variables : my_var = 1488 - 52 / 2
+
 Create custom functions : f(x, y) = x^2 + |sin(y)| - 3!
 
 
