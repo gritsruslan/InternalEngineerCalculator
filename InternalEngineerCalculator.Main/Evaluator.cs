@@ -18,7 +18,7 @@ public sealed class Evaluator(FunctionManager functionManager, VariableManager v
 		.Select(fi => new FunctionInfo(fi.Name, fi.CountOfArgs))
 		.Reverse().ToImmutableArray();
 
-	private bool IsInCustomFunction => !_functionCallStack.IsNotEmpty();
+	private bool IsInCustomFunction => _functionCallStack.IsNotEmpty();
 
 	/// <summary> Check function for circular dependency during evaluation </summary>
 	// Example :

@@ -107,7 +107,7 @@ public sealed class Parser(ImmutableArray<Token> tokens)
 		if (Current.Type == TokenType.EndOfLine)
 			return new Error("Function cant be empty!");
 
-		var functionExpressionResult = ParseWithPrecedence();
+		var functionExpressionResult = Parse();
 		if (!functionExpressionResult.TryGetValue(out var functionExpression))
 			return functionExpressionResult.Error;
 

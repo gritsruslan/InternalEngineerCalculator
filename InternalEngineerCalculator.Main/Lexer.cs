@@ -111,7 +111,7 @@ public sealed class Lexer
 
 			Next();
 		}
-		while (char.IsDigit(Current) || Current == dot);
+		while (!IsSeparator(Current));
 
 		if (!double.TryParse(tokenString, NumberStyles.Float, CultureInfo.InvariantCulture, out var tokenValue))
 			return new Error($"The entry \"{tokenString}\" cannot be represented as a number.");
