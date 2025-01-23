@@ -57,16 +57,25 @@ internal sealed class CommandLineTool(
 
 			"""
 			InternalEngineerCalculator by @gritsruslan!
+			Simple AST math console calculator that supports functions and variables.
 
 			Range of possible values : +/- 1.7E-308 to 1.7E+308
 			Available math operators : + - * / ^ % ! |x|
 
 			Examples:
 			12 + 3 * (2 - 1)
-			2 ^ 3 + 52
+			2 ^ 3 + 52 + 3!
 			1/20 + 20 % 3
-			-3! + |-1|
+			-3! + |sin(20)|
 			1 / (1 + exp(-2))
+
+			Variables assignment:
+			x = 20
+			myvariable = -3 * (sin(20) - 0.2)
+
+			Functions assignment:
+			f(x) = 20 + x
+			my_func(x,y,z) = sin(x + y + z) - z!
 
 			Available commands :
 			#exit - exit calculator
