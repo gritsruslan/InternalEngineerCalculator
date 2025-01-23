@@ -1,27 +1,20 @@
+using System.Collections.Immutable;
 using InternalEngineerCalculator.Main.Functions;
 using InternalEngineerCalculator.Main.Variables;
 
 namespace InternalEngineerCalculator.Main;
 
-internal class CommandLineTool
+internal sealed class CommandLineTool(
+	Dictionary<FunctionInfo, string> functionAssignmentStrings,
+	FunctionManager functionManager,
+	VariableManager variableManager,
+	Dictionary<string, bool> environmentVariables)
 {
-	// for future
-	private FunctionManager _functionManager;
-
-	private VariableManager _variableManager;
-
-	private Dictionary<string, bool> _environmentVariables;
-
-	public CommandLineTool(FunctionManager functionManager, VariableManager variableManager, Dictionary<string, bool>  environmentVariables)
-	{
-		_functionManager = functionManager;
-		_variableManager = variableManager;
-		_environmentVariables = environmentVariables;
-	}
-
 	public void ProcessCommand(string command)
 	{
-		var commandComponents = command.Split(' ');
+		var commandComponents = command.Split(' ')
+			.Where(s => !string.IsNullOrWhiteSpace(s)).ToImmutableArray();
+
 		var commandName = commandComponents[0].ToLower();
 		var args = commandComponents[1..];
 
@@ -36,49 +29,71 @@ internal class CommandLineTool
 			case "#showtokens":
 				ShowTokensCommand(args); break;
 			case "#showexpressiontree" :
-				ShowExpressionTreeCommand(args); break;
+				ShowExpressionTree(args); break;
 			case "#showbasicfunctions":
 				ShowBasicFunctions(args); break;
 			case "#showvariables":
 				ShowVariables(args); break;
+			case "#deletevariable":
+				DeleteVariable(args); break;
+			case "#showcustomfunctions":
+				ShowCustomFunctions(args); break;
+			case "#deletefunction" :
+				DeleteCustomFunction(args); break;
 			default:
 				Console.WriteLine($"Unknown command \"{commandName}\"");
 				break;
 		}
 	}
 
-	private void HelpCommand(string[] args)
+	private void HelpCommand(ImmutableArray<string> args)
 	{
 		if (args.Length != 0)
 		{
 			PrintIfIncorrectCountOfArguments("help", 0, args.Length);
 			return;
 		}
+		const string helpString =
 
-		string helpString =
 			"""
-
 			InternalEngineerCalculator by @gritsruslan!
+			Simple AST math console calculator that supports functions and variables.
 
-			Available math operators : + - * / ^
+			Range of possible values : +/- 1.7E-308 to 1.7E+308
+			Available math operators : + - * / ^ % ! |x|
+
 			Examples:
 			12 + 3 * (2 - 1)
-			2 ^ 3 + 52
-			1/20 + 1
+			2 ^ 3 + 52 + 3!
+			1/20 + 20 % 3
+			-3! + |sin(20)|
+			1 / (1 + exp(-2))
+
+			Variables assignment:
+			x = 20
+			myvariable = -3 * (sin(20) - 0.2)
+
+			Functions assignment:
+			f(x) = 20 + x
+			my_func(x,y,z) = sin(x + y + z) - z!
 
 			Available commands :
 			#exit - exit calculator
 			#clear - clear console output
 			#help - output short calculator guide
-			#showexpressiontree - enable showing expression trees
-			#unshowexpressiontree - disable showing expression trees
-
+			#ShowTokens <true | false> - enable or disable tokens
+			#ShowExpressionTree <true | false> - enable or disable showing expression trees
+			#ShowBasicFunctions - show basic calculator functions
+			#ShowCustomFunctions - shows user defined functions
+			#DeleteFunction <name> <countOfArgs> - delete user defined function
+			#ShowVariables - show user defined variables
+			#DeleteVariable <name> - delete variable
 			""";
 
 		Console.WriteLine(helpString);
 	}
 
-	private void ExitCommand(string[] args)
+	private void ExitCommand(ImmutableArray<string> args)
 	{
 		if (args.Length != 0)
 		{
@@ -89,7 +104,7 @@ internal class CommandLineTool
 		Environment.Exit(0);
 	}
 
-	private void ClearConsoleCommand(string[] args)
+	private void ClearConsoleCommand(ImmutableArray<string> args)
 	{
 		if (args.Length != 0)
 		{
@@ -100,7 +115,7 @@ internal class CommandLineTool
 		Console.Clear();
 	}
 
-	private void ShowTokensCommand(string[] args)
+	private void ShowTokensCommand(ImmutableArray<string> args)
 	{
 		if (args.Length != 1)
 		{
@@ -111,9 +126,15 @@ internal class CommandLineTool
 		var arg = args[0].ToLower();
 
 		if (arg == "true")
-			_environmentVariables["ShowTokens"] = true;
+		{
+			environmentVariables["ShowTokens"] = true;
+			Console.WriteLine("Token display enabled!");
+		}
 		else if (arg == "false")
-			_environmentVariables["ShowTokens"] = false;
+		{
+			environmentVariables["ShowTokens"] = false;
+			Console.WriteLine("Token display disabled!");
+		}
 		else
 		{
 			Console.ForegroundColor = ConsoleColor.Yellow;
@@ -122,7 +143,7 @@ internal class CommandLineTool
 		}
 	}
 
-	private void ShowExpressionTreeCommand(string[] args)
+	private void ShowExpressionTree(ImmutableArray<string> args)
 	{
 		if (args.Length != 1)
 		{
@@ -133,9 +154,15 @@ internal class CommandLineTool
 		var arg = args[0].ToLower();
 
 		if (arg == "true")
-			_environmentVariables["ShowExpressionTree"] = true;
+		{
+			environmentVariables["ShowExpressionTree"] = true;
+			Console.WriteLine("Display expression tree enabled.");
+		}
 		else if (arg == "false")
-			_environmentVariables["ShowExpressionTree"] = false;
+		{
+			environmentVariables["ShowExpressionTree"] = false;
+			Console.WriteLine("Display expression tree disabled.");
+		}
 		else
 		{
 			Console.ForegroundColor = ConsoleColor.Yellow;
@@ -144,7 +171,7 @@ internal class CommandLineTool
 		}
 	}
 
-	private void ShowBasicFunctions(string[] args)
+	private void ShowBasicFunctions(ImmutableArray<string> args)
 	{
 		if (args.Length != 0)
 		{
@@ -152,44 +179,110 @@ internal class CommandLineTool
 			return;
 		}
 
-		var basicFunctions =
+		const string basicFunctions =
 			"""
-
+			=========================================
 			Basic functions:
 
 			sin(x)       => Returns the sine of the angle `x` (in radians).
 			cos(x)       => Returns the cosine of the angle `x` (in radians).
 			tg(x)        => Returns the tangent of the angle `x` (in radians).
 			ctg(x)       => Returns the cotangent of the angle `x` (in radians), which is `1 / tan(x)`.
-			rad(x)       => Converts an angle `x` from degrees to radians.
-			deg(x)       => Converts an angle `x` from radians to degrees.
 			sqrt(x)      => Returns the square root of `x`.
 			sqrt(x, b)   => Returns the `b`-th root of `x`. Equivalent to `x^(1/b)`.
 			floor(x)     => Rounds `x` down to the nearest integer.
 			ceil(x)      => Rounds `x` up to the nearest integer.
 			round(x)     => Rounds `x` to the nearest integer (rounds half values up).
+			rad(x)       => Converts an angle `x` from degrees to radians.
+			deg(x)       => Converts an angle `x` from radians to degrees.
 			log10(x)     => Returns the base-10 logarithm of `x`.
 			log(x, b)    => Returns the logarithm of `x` with base `b`.
 			ln(x)        => Returns the natural logarithm of `x` (logarithm to the base `e`).
-			e(x)         => Returns `e^x`, where `e` is Euler's number (~2.718).
+			exp(x)         => Returns `e^x`, where `e` is Euler's number (~2.718).
 			pow(x, y)    => Returns `x` raised to the power of `y` (`x^y`).
-
+			=========================================
 			""";
 
 		Console.WriteLine(basicFunctions);
 	}
 
-	private void PrintIfIncorrectCountOfArguments(string command,int mustHaveArgs, int countOfArgs)
+	private void PrintIfIncorrectCountOfArguments(string command, int mustHaveArgs, int countOfArgs)
 	{
-		Console.ForegroundColor = ConsoleColor.Yellow;
 		var argsString = mustHaveArgs == 1 ? "arguments" : "argument";
 		var transmised = countOfArgs == 1 ? "was" : "were";
-		Console.WriteLine(
+		PrintError(
 			$"{command} command must have {mustHaveArgs} {argsString}, but {countOfArgs} {transmised} transmised");
-		Console.ForegroundColor = ConsoleColor.Gray;
 	}
 
-	private void ShowVariables(string[] args)
+	private void PrintError(string message)
+	{
+		Console.ForegroundColor = ConsoleColor.Yellow;
+		Console.WriteLine(message);
+		Console.ForegroundColor = ConsoleColor.Gray;
+
+	}
+
+	private void ShowCustomFunctions(ImmutableArray<string> args)
+	{
+		if (args.Length != 0)
+		{
+			PrintIfIncorrectCountOfArguments("ShowCustomFunctions", 0, args.Length);
+			return;
+		}
+
+		Console.WriteLine("=========================================");
+		Console.WriteLine("Custom Functions : ");
+
+		foreach (var function in functionAssignmentStrings)
+			Console.WriteLine(function.Value);
+
+		Console.WriteLine("=========================================");
+	}
+
+	private void DeleteCustomFunction(ImmutableArray<string> args)
+	{
+		if (args.Length != 2)
+		{
+			PrintIfIncorrectCountOfArguments("DeleteFunction", 2, args.Length);
+			return;
+		}
+
+		var name = args[0];
+		if (!int.TryParse(args[1], out var countOfArgs))
+		{
+			PrintError($"The \"{args[1]}\" is not correct argument!");
+			return;
+		}
+
+		var info = new FunctionInfo(name, countOfArgs);
+		var deleteResult = functionManager.DeleteFunction(info);
+
+		if(deleteResult.IsFailure)
+			PrintError(deleteResult.Error.Message);
+		else
+		{
+			functionAssignmentStrings.Remove(info);
+			Console.WriteLine($"Function \"{name}\" with \"{countOfArgs}\" was successfully deleted!");
+		}
+	}
+
+	private void DeleteVariable(ImmutableArray<string> args)
+	{
+		if (args.Length != 1)
+		{
+			PrintIfIncorrectCountOfArguments("DeleteVariable", 1, args.Length);
+			return;
+		}
+
+		var deleteResult = variableManager.DeleteVariable(args[0]);
+
+		if(deleteResult.IsSuccess)
+			Console.WriteLine($"Variable \"{args[0]}\" was successfully deleted!");
+		else
+			PrintError(deleteResult.Error.Message);
+	}
+
+	private void ShowVariables(ImmutableArray<string> args)
 	{
 		if (args.Length != 0)
 		{
@@ -197,14 +290,12 @@ internal class CommandLineTool
 			return;
 		}
 
-		var variables = _variableManager.GetVariables();
+		var variables = variableManager.GetVariables();
 
-		Console.WriteLine("Variables");
-
+		Console.WriteLine("=========================================");
+		Console.WriteLine("Variables : ");
 		foreach (var (name,value) in variables)
-			Console.WriteLine($"{name} : {value}");
-
-		Console.WriteLine();
+			Console.WriteLine($"{name} = {value.Value}");
+		Console.WriteLine("=========================================");
 	}
-
 }

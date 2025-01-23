@@ -1,39 +1,33 @@
+using InternalEngineerCalculator.Main.Common;
 using InternalEngineerCalculator.Main.Expressions;
 using InternalEngineerCalculator.Main.Functions;
 using InternalEngineerCalculator.Main.Variables;
 
 namespace InternalEngineerCalculator.Main;
 
-internal class AssignmentExpressionHandler
+/// <summary> functions and variables assignment handler </summary>
+public sealed class AssignmentExpressionHandler(
+	Evaluator evaluator,
+	VariableManager variableManager,
+	FunctionManager functionManager)
 {
-	private Evaluator _evaluator;
-
-	private VariableManager _variableManager;
-
-	private FunctionManager _functionManager;
-
-	public AssignmentExpressionHandler(Evaluator evaluator, VariableManager variableManager, FunctionManager functionManager)
-	{
-		_variableManager = variableManager;
-		_functionManager = functionManager;
-		_evaluator = evaluator;
-	}
-
-	public void HandleFunctionAssignmentExpression(FunctionAssignmentExpression functionExpression)
-	{
-		_functionManager.CreateNewCustomFunction(
+	public bool HandleFunctionAssignmentExpression(FunctionAssignmentExpression functionExpression) =>
+		functionManager.CreateOrOverrideCustomFunction(
 			functionExpression.Name,
 			functionExpression.Args,
-			functionExpression.FunctionExpression);
-	}
+			functionExpression.Expression);
 
-	public double HandleVariableAssignmentExpression(VariableAssignmentExpression variableExpression)
+	public Result<double> HandleVariableAssignmentExpression(VariableAssignmentExpression variableExpression)
 	{
 		var variableName = variableExpression.Name;
 
-		var variableValue = _evaluator.Evaluate(variableExpression.VariableValueExpression);
+		var variableValueResult = evaluator.Evaluate(variableExpression.Expression);
+		if (!variableValueResult.TryGetValue(out var variableValue))
+			return variableValueResult;
 
-		_variableManager.InitializeOrUpdateVariable(variableName, variableValue);
+		var result = variableManager.InitializeOrUpdateVariable(variableName, variableValue);
+		if (result.IsFailure)
+			return result.Error;
 
 		return variableValue; // returns new variable value for print
 	}

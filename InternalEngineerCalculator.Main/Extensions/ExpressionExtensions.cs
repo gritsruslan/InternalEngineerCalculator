@@ -6,57 +6,88 @@ internal static class ExpressionExtensions
 {
 	public static void PrettyPrint(this Expression expression, string offset = "")
 	{
-		if(expression is NumberExpression numberExpression)
-			Console.WriteLine(offset + $"Number : {numberExpression.Token.ValueString}");
-
-		if (expression is UnaryExpression unaryExpression)
+		switch (expression)
 		{
-			offset += "  ";
-			Console.WriteLine(offset + $"Operation {unaryExpression.UnaryOperation.ValueString}");
-			unaryExpression.Expression.PrettyPrint(offset);
+			case NumberExpression numberExpression:
+				NumberExpressionPrint(numberExpression, offset);
+				break;
+			case UnaryExpression unaryExpression:
+				UnaryExpressionPrint(unaryExpression, ref offset);
+				break;
+			case BinaryExpression binaryExpression:
+				BinaryExpressionPrint(binaryExpression, ref offset);
+				break;
+			case FunctionCallExpression functionCallExpression:
+				FunctionCallExpressionPrint(functionCallExpression, ref offset);
+				break;
+			case VariableExpression variableExpression:
+				VariableExpressionPrint(variableExpression, ref offset);
+				break;
+			case VariableAssignmentExpression variableAssignmentExpression:
+				VariableAssignmentExpressionPrint(variableAssignmentExpression, ref offset);
+				break;
+			case FunctionAssignmentExpression functionAssignmentExpression:
+				FunctionAssignmentExpressionPrint(functionAssignmentExpression, ref offset);
+				break;
+			default:
+				throw new Exception("Undefined expression type to print!");
 		}
+	}
 
-		if (expression is BinaryExpression binaryExpression)
+	private static void NumberExpressionPrint(NumberExpression expression, string offset)
+	{
+		Console.WriteLine(offset + $"Number : {expression.ValueString}");
+	}
+
+	private static void UnaryExpressionPrint(UnaryExpression expression, ref string offset)
+	{
+		offset += "  ";
+		Console.WriteLine(offset + $"Operation {expression.Type}");
+		expression.Expression.PrettyPrint(offset);
+	}
+
+	private static void BinaryExpressionPrint(BinaryExpression expression, ref string offset)
+	{
+		Console.WriteLine(offset + "Binary Expression");
+		offset += "  ";
+		expression.Left.PrettyPrint(offset);
+		Console.WriteLine(offset + $"Operation {expression.OperationType}");
+		expression.Right.PrettyPrint(offset);
+	}
+
+	private static void FunctionCallExpressionPrint(FunctionCallExpression expression, ref string offset)
+	{
+		Console.WriteLine(offset + $"Function {expression.Name}");
+		offset += "  ";
+		for (int i = 0; i < expression.Arguments.Length; i++)
 		{
-			Console.WriteLine(offset + "Binary Expression");
-			offset += "  ";
-			binaryExpression.Left.PrettyPrint(offset);
-			Console.WriteLine(offset + $"Operation {binaryExpression.Operation.ValueString}");
-			binaryExpression.Right.PrettyPrint(offset);
+			Console.WriteLine(offset + $"Argument {i}");
+			expression.Arguments[i].PrettyPrint(offset);
 		}
+	}
 
-		if (expression is FunctionCallExpression functionExpression)
-		{
-			Console.WriteLine(offset + $"Function {functionExpression.Name}");
-			offset += "  ";
-			for (int i = 0; i < functionExpression.Arguments.Length; i++)
-			{
-				Console.WriteLine(offset + $"Argument {i}");
-				functionExpression.Arguments[i].PrettyPrint(offset);
-			}
-		}
+	private static void VariableExpressionPrint(VariableExpression expression, ref string offset)
+	{
+		Console.WriteLine(offset + $"Variable {expression.Name}");
+	}
 
-		if (expression is VariableExpression variableExpression)
-			Console.WriteLine(offset + $"Variable {variableExpression.Name}");
+	private static void VariableAssignmentExpressionPrint(VariableAssignmentExpression expression, ref string offset)
+	{
+		Console.WriteLine($"Variable \"{expression.Name}\" assignment :");
+		offset += "  ";
+		expression.Expression.PrettyPrint(offset);
+	}
 
-		if (expression is VariableAssignmentExpression variableAssignmentExpression)
-		{
-			Console.WriteLine($"Variable \"{variableAssignmentExpression.Name}\" assignment :");
-			offset += "  ";
-			variableAssignmentExpression.VariableValueExpression.PrettyPrint(offset);
-		}
+	private static void FunctionAssignmentExpressionPrint(FunctionAssignmentExpression expression, ref string offset)
+	{
+		Console.WriteLine("Function assignment expression : ");
+		offset += "  ";
+		Console.WriteLine(offset + $"Function name : {expression.Name}");
 
-		if (expression is FunctionAssignmentExpression functionAssignmentExpression)
-		{
-			Console.WriteLine("Function assignment expression : ");
-			offset += "  ";
-			Console.WriteLine(offset + $"Function name : {functionAssignmentExpression.Name}");
+		foreach (var arg in expression.Args)
+			Console.WriteLine(offset + $"Argument {arg}");
 
-			foreach (var arg in functionAssignmentExpression.Args)
-				Console.WriteLine(offset + $"Argument {arg}");
-
-			Console.WriteLine(offset + "Function expression : ");
-			functionAssignmentExpression.FunctionExpression.PrettyPrint(offset);
-		}
+		Console.WriteLine(offset + "Function expression : ");
+		expression.Expression.PrettyPrint(offset);
 	}
 }

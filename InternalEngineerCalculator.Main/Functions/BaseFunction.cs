@@ -1,12 +1,13 @@
+using System.Collections.Immutable;
+
 namespace InternalEngineerCalculator.Main.Functions;
 
-internal sealed class BaseFunction(string name, int countOfArgs, Func<double[], double> function) :
+internal sealed class BaseFunction(string name, int countOfArgs, Func<ImmutableArray<double>, double> function) :
 	Function(name)
 {
-	public readonly Func<double[], double> Function = function;
-
-	public override int CountOfArgs => countOfArgs;
+	public Func<ImmutableArray<double>, double> Function { get; } = function;
 
 	public override bool IsBaseFunction => true;
 
+	public override int CountOfArgs { get; } = countOfArgs;
 }

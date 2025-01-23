@@ -1,12 +1,10 @@
 namespace InternalEngineerCalculator.Main.Common;
 
-/// <summary>
-/// Custom Option datatype implementation (like in Rust)
-/// </summary>
-/// <typeparam name="T"></typeparam>
+/// <summary> Custom Option datatype implementation (like in Rust) </summary>
 public class Option<T>
 {
-    private string NoneValueMessage => $"The value in Option<{typeof(T)}> was None!";
+    private static string NoneValueMessage => $"The value in Option<{typeof(T)}> was None!";
+
     private Option(T value)
     {
         if (value is null)
@@ -70,7 +68,7 @@ public class Option<T>
         IsNone ? alternative.Invoke() : this;
 
     public Option<T> And(Option<T> other) =>
-        (IsSome || other.IsSome) ? other : throw new InvalidOperationException(NoneValueMessage);
+        IsSome || other.IsSome ? other : throw new InvalidOperationException(NoneValueMessage);
 
     public Option<TU> AndThen<TU>(Func<T, Option<TU>> func) =>
         IsNone ? Option<TU>.None : func.Invoke(_value);

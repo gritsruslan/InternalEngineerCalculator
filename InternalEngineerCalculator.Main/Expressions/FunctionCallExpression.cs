@@ -1,15 +1,12 @@
-using InternalEngineerCalculator.Main.Expressions;
-using InternalEngineerCalculator.Main.Tokens;
+using System.Collections.Immutable;
 
-namespace InternalEngineerCalculator.Main;
+namespace InternalEngineerCalculator.Main.Expressions;
 
-internal sealed class FunctionCallExpression(string name, Expression[] arguments) : Expression
+internal sealed class FunctionCallExpression(string name, ImmutableArray<Expression> arguments) : Expression
 {
-	public readonly string Name = name;
+	public string Name { get; } = name;
 
-	public readonly Expression[] Arguments = arguments;
-
-	public override TokenType Type => TokenType.FunctionCall;
+	public ImmutableArray<Expression> Arguments { get; } = arguments;
 
 	public int CountOfArgs => Arguments.Length;
 }

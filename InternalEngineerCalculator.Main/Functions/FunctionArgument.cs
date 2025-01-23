@@ -1,3 +1,3 @@
 namespace InternalEngineerCalculator.Main.Functions;
 
-internal record FunctionArgument(string Name);
+internal record struct FunctionArgument(string Name);

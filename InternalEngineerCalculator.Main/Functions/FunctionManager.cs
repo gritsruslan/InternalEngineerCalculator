@@ -1,16 +1,13 @@
-using InternalEngineerCalculator.Main.Exceptions;
+using System.Collections.Immutable;
+using InternalEngineerCalculator.Main.Common;
 using InternalEngineerCalculator.Main.Expressions;
 
 namespace InternalEngineerCalculator.Main.Functions;
 
-internal class FunctionManager
+/// <summary> Container for functions </summary>
+public sealed class FunctionManager
 {
-	private readonly Dictionary<FunctionCallHeader, Function> _functions;
-
-	public FunctionManager()
-	{
-		_functions = new Dictionary<FunctionCallHeader, Function>();
-	}
+	private readonly Dictionary<FunctionInfo, Function> _functions = new();
 
 	public void InitializeDefaultFunctions()
 	{
@@ -25,7 +22,7 @@ internal class FunctionManager
 		//Sqrt2
 		CreateNewBaseFunction("sqrt", 1, args => Math.Sqrt(args[0]));
 		//SqrtN
-		CreateNewBaseFunction("sqrt", 2, args => Math.Exp(Math.Log(args[0], Math.E) / args[1]) );
+		CreateNewBaseFunction("sqrt", 2, args => RMath.Sqrt(args[0], args[1]));
 		//Floor
 		CreateNewBaseFunction("floor", 1, args => Math.Floor(args[0]));
 		//Ceil
@@ -33,71 +30,59 @@ internal class FunctionManager
 		//Round
 		CreateNewBaseFunction("round", 1, args => Math.Round(args[0]));
 		//Rad
-		CreateNewBaseFunction("rad", 1, args => args[0] * 180 / Math.PI);
+		CreateNewBaseFunction("rad", 1, args => RMath.DegreeToRadians(args[0]));
 		//Deg
-		CreateNewBaseFunction("deg", 1, args => args[0] * Math.PI / 180);
-		//Fact
-		CreateNewBaseFunction("fact", 1, args =>
-		{
-			var n = args[0];
-			if (n < 0)
-				throw new CalculatorException("The factorial of negative number is not defined!");
-
-			double result = 1;
-			for (int i = 2; i <= n; i++)
-				result *= i;
-			return result;
-		});
-
+		CreateNewBaseFunction("deg", 1, args => RMath.RadiansToDegree(args[0]));
 		//Log10
 		CreateNewBaseFunction("log10", 1, args => Math.Log10(args[0]));
 		//Log
 		CreateNewBaseFunction("log", 2, args => Math.Log(args[0], args[1]));
 		//Ln
-		CreateNewBaseFunction("ln", 1, args => Math.Log(args[0], Math.E));
-		//E
-		CreateNewBaseFunction("e", 1, args => Math.Exp(args[0]));
+		CreateNewBaseFunction("ln", 1, args => RMath.Ln(args[0]));
+		//Exp
+		CreateNewBaseFunction("exp", 1, args => Math.Exp(args[0]));
 		//Pow
 		CreateNewBaseFunction("pow", 2, args => Math.Pow(args[0], args[1]));
 	}
 
-	public Function GetFunctionByHeader(FunctionCallHeader header)
+	public bool HasFunction(FunctionInfo header) => _functions.ContainsKey(header);
+
+	public Result<Function> GetFunction(FunctionInfo info)
 	{
-		if(_functions.TryGetValue(header, out var function))
+		if(_functions.TryGetValue(info, out var function))
 			return function;
 
-		throw new FunctionNotFoundException(header.FunctionName, header.CountOfArg);
+		return ErrorBuilder.FunctionNotFound(info.Name, info.CountOfArg);
 	}
 
-	public bool HasFunction(FunctionCallHeader header) => _functions.ContainsKey(header);
-
-	public void CreateNewCustomFunction(string name, IReadOnlyList<string> args, Expression functionExpression)
+	public EmptyResult DeleteFunction(FunctionInfo info)
 	{
-		var header = new FunctionCallHeader(name, args.Count);
+		var functionResult = GetFunction(info);
+		if (!functionResult.TryGetValue(out var function))
+			return ErrorBuilder.FunctionNotFound(info.Name, info.CountOfArg);
 
-		if (HasFunction(header))
-			throw new CalculatorException(
-				$"There are a function with name \"{name}\" and {args.Count} arguments. " +
-				$"If you want to override it, first of all delete old function!");
+		if (function.IsBaseFunction)
+			return new Error("Cannot delete base function!");
 
+		_functions.Remove(info);
+
+		return EmptyResult.Success();
+	}
+
+	public bool CreateOrOverrideCustomFunction(string name, IReadOnlyList<string> args, Expression functionExpression)
+	{
+		var header = new FunctionInfo(name, args.Count);
+		var isOverriding = HasFunction(header);
 		var convArgs = args.Select(arg => new FunctionArgument(arg));
+		var function = new CustomFunction(name, [..convArgs], functionExpression);
+		_functions[header] = function;
 
-		var function = new CustomFunction(name, convArgs.ToList(), functionExpression);
-
-		_functions.Add(header, function);
+		return isOverriding;
 	}
 
-	public void DeleteFunction(string name, int countOfArgs)
+	private void CreateNewBaseFunction(string name, int countOfArgs, Func<ImmutableArray<double>, double> function)
 	{
-		var header = new FunctionCallHeader(name, countOfArgs);
-
-		if(!_functions.Remove(header))
-			throw new FunctionNotFoundException(name, countOfArgs);
-	}
-
-	private void CreateNewBaseFunction(string name, int countOfArgs, Func<double[], double> function)
-	{
-		_functions.Add(new FunctionCallHeader(name, countOfArgs),
+		_functions.Add(new FunctionInfo(name, countOfArgs),
 			new BaseFunction(name, countOfArgs, function));
 	}
 }

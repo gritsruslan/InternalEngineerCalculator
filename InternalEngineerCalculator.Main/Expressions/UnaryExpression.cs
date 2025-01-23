@@ -1,12 +1,8 @@
-using InternalEngineerCalculator.Main.Tokens;
-
 namespace InternalEngineerCalculator.Main.Expressions;
 
-internal sealed class UnaryExpression(NonValueToken unaryOperation, Expression expression) : Expression
+internal sealed class UnaryExpression(Expression expression, UnaryExpressionType type) : Expression
 {
-	public Expression Expression { get; set; } = expression;
+	public Expression Expression { get; } = expression;
 
-	public NonValueToken UnaryOperation { get; set; } = unaryOperation;
-
-	public override TokenType Type => TokenType.UnaryOperation;
+	public UnaryExpressionType Type { get; } = type;
 }
